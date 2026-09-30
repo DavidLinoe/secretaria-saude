@@ -20,16 +20,16 @@ import { validateImageFile } from './validate-image-file';
         type="button"
         (click)="openPicker()"
         [disabled]="disabled"
-        class="w-20 h-20 rounded-2xl bg-slate-100 border-2 border-dashed border-slate-300 flex items-center justify-center overflow-hidden active:scale-95 transition-transform disabled:opacity-50"
+        class="w-16 h-16 bg-white border border-dashed border-slate-300 flex items-center justify-center overflow-hidden hover:border-slate-400 transition-colors disabled:opacity-50"
       >
         @if (preview) {
           <img [src]="preview" alt="Prévia" class="w-full h-full object-cover" />
         } @else {
-          <i class="pi pi-camera text-slate-400 text-xl"></i>
+          <i class="pi pi-camera text-slate-400 text-base"></i>
         }
       </button>
       @if (error) {
-        <p class="text-[11px] text-red-600 text-center">{{ error }}</p>
+        <p class="text-xs text-red-700 text-center">{{ error }}</p>
       }
       <input
         #fileInput

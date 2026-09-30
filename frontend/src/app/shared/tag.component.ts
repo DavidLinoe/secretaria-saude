@@ -3,11 +3,11 @@ import { CommonModule } from '@angular/common';
 
 export type TagColor = 'success' | 'danger' | 'warning' | 'info';
 
-const COLOR_CLASSES: Record<TagColor, string> = {
-  success: 'bg-green-100 text-green-700',
-  danger: 'bg-red-100 text-red-700',
-  warning: 'bg-amber-100 text-amber-700',
-  info: 'bg-blue-100 text-blue-700',
+const DOT_CLASSES: Record<TagColor, string> = {
+  success: 'bg-emerald-600',
+  danger: 'bg-red-600',
+  warning: 'bg-amber-600',
+  info: 'bg-slate-400',
 };
 
 @Component({
@@ -15,7 +15,8 @@ const COLOR_CLASSES: Record<TagColor, string> = {
   standalone: true,
   imports: [CommonModule],
   template: `
-    <span class="inline-block px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wide" [ngClass]="colorClass">
+    <span class="inline-flex items-center gap-1.5 text-xs font-medium text-slate-600">
+      <span class="w-1.5 h-1.5 rounded-full" [ngClass]="dotClass"></span>
       {{ label }}
     </span>
   `,
@@ -24,7 +25,7 @@ export class TagComponent {
   @Input() label = '';
   @Input() color: TagColor = 'info';
 
-  get colorClass(): string {
-    return COLOR_CLASSES[this.color];
+  get dotClass(): string {
+    return DOT_CLASSES[this.color];
   }
 }

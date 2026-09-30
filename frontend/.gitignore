@@ -46,3 +46,6 @@ Thumbs.db
 /android
 /ios
 .capacitor/
+
+# APKs gerados por scripts/build-apk.sh
+/release

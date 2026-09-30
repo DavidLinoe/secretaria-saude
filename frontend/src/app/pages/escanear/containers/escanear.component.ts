@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { PhotoPickerComponent } from '../../../shared/photo-picker.component';
 import { SkeletonComponent } from '../../../shared/skeleton.component';
 import { TagComponent } from '../../../shared/tag.component';
@@ -7,6 +8,11 @@ import { validateImageFile } from '../../../shared/validate-image-file';
 import { EscanearFacade } from '../facades/escanear.facade';
 import { EscanearAdapter } from '../adapters/escanear.adapter';
 import { NotaRegistro } from '../models/escanear.model';
+
+interface Captura {
+  file: File;
+  preview: string;
+}
 
 @Component({
   selector: 'app-escanear',
@@ -20,10 +26,54 @@ export class EscanearComponent implements OnInit {
 
   loteInvalido: string | null = null;
 
+  /** Fotos batidas na câmera nesta sessão, aguardando envio (ver `abrirCamera`). */
+  capturas: Captura[] = [];
+  capturando = false;
+
   constructor(public facade: EscanearFacade) {}
 
   ngOnInit(): void {
     this.facade.carregarHistorico();
+  }
+
+  /**
+   * Abre a câmera nativa (`@capacitor/camera` — no navegador/dev cai pro
+   * seletor de arquivo do próprio plugin). Cada chamada tira 1 foto e
+   * acumula em `capturas`; o usuário decide quando enviar (`enviarCapturas`),
+   * podendo bater várias fotos em sequência sem sair da tela.
+   */
+  async abrirCamera(): Promise<void> {
+    this.capturando = true;
+    try {
+      const foto = await Camera.getPhoto({
+        resultType: CameraResultType.Uri,
+        source: CameraSource.Camera,
+        quality: 85,
+        saveToGallery: false,
+      });
+      if (!foto.webPath) return;
+
+      const blob = await fetch(foto.webPath).then((r) => r.blob());
+      const file = new File([blob], `captura-${Date.now()}.jpeg`, { type: blob.type || 'image/jpeg' });
+      this.capturas = [...this.capturas, { file, preview: foto.webPath }];
+    } catch (err) {
+      // Usuário cancelou a câmera — não é erro, só não faz nada.
+      if ((err as Error)?.message?.toLowerCase().includes('cancel')) return;
+      console.error('[EscanearComponent] falha ao abrir a câmera:', err);
+    } finally {
+      this.capturando = false;
+    }
+  }
+
+  removerCaptura(index: number): void {
+    this.capturas = this.capturas.filter((_, i) => i !== index);
+  }
+
+  async enviarCapturas(): Promise<void> {
+    if (!this.capturas.length) return;
+    const files = this.capturas.map((c) => c.file);
+    this.capturas = [];
+    await this.facade.enviarLote(files);
   }
 
   onFotoUnica(file: File): void {

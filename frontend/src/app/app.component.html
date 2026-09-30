@@ -4,8 +4,8 @@
   @for (item of navItems; track item.route) {
     <a
       [routerLink]="item.route"
-      routerLinkActive="text-teal-700"
-      class="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-slate-400 text-[11px] font-semibold active:scale-95 transition-transform"
+      routerLinkActive="text-slate-900"
+      class="flex-1 flex flex-col items-center justify-center gap-1 py-2.5 text-slate-400 text-[11px]"
     >
       <i class="pi {{ item.icon }} text-base"></i>
       {{ item.label }}
