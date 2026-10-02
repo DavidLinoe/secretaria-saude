@@ -30,6 +30,10 @@ export class NotasRepository {
     return this.notas.get(id);
   }
 
+  clear(): void {
+    this.notas.clear();
+  }
+
   remove(id: string): boolean {
     return this.notas.delete(id);
   }

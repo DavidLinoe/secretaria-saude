@@ -1,0 +1,181 @@
+<div class="page">
+
+  <header class="page-header">
+    <h2>Estoque</h2>
+    <p>Medicamentos e insumos por lote e validade</p>
+  </header>
+
+  <!-- RESUMO (números) — toque filtra a lista -->
+  @if (facade.resumo(); as r) {
+    <div class="grid grid-cols-4 gap-2 px-4 -mt-3">
+      <button (click)="setFiltro('')" class="kpi"><p class="kpi-valor">{{ r.totalItens }}</p><p class="kpi-rotulo">lotes</p></button>
+      <div class="kpi"><p class="kpi-valor">{{ r.totalUnidades }}</p><p class="kpi-rotulo">unidades</p></div>
+      <button (click)="setFiltro('vencendo')" class="kpi" [class.!border-amber-400]="r.vencendo"><p class="kpi-valor" [class.!text-amber-600]="r.vencendo">{{ r.vencendo }}</p><p class="kpi-rotulo">vencendo</p></button>
+      <button (click)="setFiltro('vencido')" class="kpi" [class.!border-red-400]="r.vencidos"><p class="kpi-valor" [class.!text-red-600]="r.vencidos">{{ r.vencidos }}</p><p class="kpi-rotulo">vencidos</p></button>
+    </div>
+  }
+
+  <!-- INFORMAÇÃO -->
+  <div class="px-4 mt-4">
+    <app-ajuda titulo="Como ler o estoque" chave="estoque">
+      <p>Cada linha é um <strong>lote</strong>. O mesmo remédio com lotes diferentes aparece em linhas separadas, porque cada lote tem a sua validade.</p>
+      <p>Selos de validade: <strong>verde</strong> = ok · <strong>amarelo</strong> = vence em até 180 dias (use primeiro) · <strong>vermelho</strong> = vencido, não dispensar.</p>
+      <p>O número grande à direita é o saldo. Abaixo do <strong>estoque mínimo</strong> ele fica vermelho.</p>
+      <p>Toque numa linha para dar <strong>entrada</strong>, <strong>saída</strong> ou <strong>ajuste</strong> (corrigir após contagem).</p>
+    </app-ajuda>
+  </div>
+
+  <!-- BUSCA E FILTROS -->
+  <div class="secao">
+    <input type="search" [(ngModel)]="busca" (ngModelChange)="onBusca()" placeholder="Buscar por nome, lote ou EAN" class="campo" />
+    <div class="flex gap-2 mt-3 overflow-x-auto pb-1">
+      @for (f of filtros; track f.valor) {
+        <button (click)="setFiltro(f.valor)" class="chip" [class.chip-ativo]="filtro === f.valor">{{ f.label }}</button>
+      }
+    </div>
+  </div>
+
+  @if (facade.erro(); as erro) {
+    <div class="px-4 mt-4"><div class="alerta-erro"><i class="pi pi-exclamation-triangle mr-1"></i>{{ erro }}</div></div>
+  }
+
+  <!-- LISTA DE DADOS -->
+  <div class="secao">
+    <p class="secao-titulo">Itens em estoque</p>
+    @if (facade.carregando() && !facade.itens().length) {
+      <div class="space-y-2"><app-skeleton height="64px"></app-skeleton><app-skeleton height="64px"></app-skeleton></div>
+    } @else if (!facade.itens().length && !facade.erro()) {
+      <div class="lista-vazia">
+        <i class="pi pi-box text-3xl text-slate-300"></i>
+        <p class="text-sm font-medium text-slate-700 mt-3">{{ busca || filtro ? 'Nada encontrado com esses filtros.' : 'O estoque está vazio.' }}</p>
+        <p class="texto-pequeno mt-1">{{ busca || filtro ? 'Limpe a busca ou escolha "Todos".' : 'Lance uma nota na aba Conferir ou toque em + para cadastrar um item.' }}</p>
+      </div>
+    } @else {
+      <div class="lista">
+        @for (item of facade.itens(); track item.id) {
+          <button (click)="abrirDetalhe(item)" class="lista-item lista-item-link">
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-semibold text-slate-900">{{ item.nome }}</p>
+              <p class="text-xs text-slate-500 mt-0.5">Lote {{ item.lote }}@if (item.localizacao) { · {{ item.localizacao }} }</p>
+              <div class="mt-1.5"><app-tag [label]="textoValidade(item)" [color]="corValidade(item)"></app-tag></div>
+            </div>
+            <div class="text-right shrink-0">
+              <p class="text-2xl font-bold leading-none" [class.text-red-600]="item.abaixoDoMinimo" [class.text-slate-900]="!item.abaixoDoMinimo">{{ item.quantidade }}</p>
+              <p class="text-[10px] uppercase text-slate-500 mt-1">{{ item.unidade }}</p>
+              @if (item.abaixoDoMinimo) { <p class="text-[10px] font-semibold text-red-600">abaixo do mín.</p> }
+            </div>
+            <i class="pi pi-angle-right text-slate-300"></i>
+          </button>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+<button (click)="novo()" class="fixed bottom-20 right-4 z-40 h-14 pl-4 pr-5 rounded-full bg-slate-900 text-white flex items-center gap-2 shadow-lg" aria-label="Novo item">
+  <i class="pi pi-plus"></i><span class="text-sm font-medium">Novo item</span>
+</button>
+
+<!-- AÇÕES (bottom sheet) -->
+@if (painel(); as p) {
+  <div class="fixed inset-0 z-[60] bg-black/50 flex items-end" (click)="fechar()">
+    <div class="bg-slate-100 w-full max-h-[90vh] overflow-y-auto rounded-t-2xl pb-8" (click)="$event.stopPropagation()">
+
+      @if (p === 'detalhe' && selecionado(); as item) {
+        <div class="bg-slate-900 text-white px-5 py-4 rounded-t-2xl flex items-start justify-between gap-3">
+          <div>
+            <p class="text-base font-semibold">{{ item.nome }}</p>
+            <p class="text-xs text-slate-300 mt-0.5">Lote {{ item.lote }}</p>
+          </div>
+          <button (click)="fechar()" aria-label="Fechar" class="text-slate-300 mt-1"><i class="pi pi-times"></i></button>
+        </div>
+
+        <div class="px-4 mt-4 space-y-4">
+          <!-- dados -->
+          <div class="painel flex items-center gap-4">
+            <div class="text-center pr-4 border-r border-slate-200">
+              <p class="text-4xl font-bold text-slate-900 leading-none">{{ item.quantidade }}</p>
+              <p class="text-[10px] uppercase text-slate-500 mt-1">{{ item.unidade }} em estoque</p>
+            </div>
+            <div class="text-xs text-slate-600 space-y-1 min-w-0">
+              <app-tag [label]="textoValidade(item)" [color]="corValidade(item)"></app-tag>
+              @if (item.estoqueMinimo) { <p>Mínimo: <strong>{{ item.estoqueMinimo }}</strong></p> }
+              @if (item.codigo) { <p>Cód.: {{ item.codigo }}</p> }
+              @if (item.ean) { <p>EAN: {{ item.ean }}</p> }
+              @if (item.fornecedor) { <p class="truncate">{{ item.fornecedor }}</p> }
+            </div>
+          </div>
+
+          @if (erroPainel(); as e) { <div class="alerta-erro">{{ e }}</div> }
+
+          <!-- ação: movimentar -->
+          <div class="painel">
+            <p class="painel-titulo">Movimentar saldo</p>
+            <p class="texto-pequeno mb-3">Entrada soma, saída subtrai e ajuste define o novo saldo (use após contagem).</p>
+            <div class="grid grid-cols-3 gap-2">
+              @for (t of ['entrada', 'saida', 'ajuste']; track t) {
+                <button (click)="movTipo = $any(t)" class="chip text-center capitalize" [class.chip-ativo]="movTipo === t">{{ t === 'saida' ? 'saída' : t }}</button>
+              }
+            </div>
+            <div class="flex gap-2 mt-3">
+              <input type="number" min="0" inputmode="numeric" [(ngModel)]="movQtd" [placeholder]="movTipo === 'ajuste' ? 'Novo saldo' : 'Quantidade'" class="campo !w-28" />
+              <input type="text" [(ngModel)]="movMotivo" placeholder="Motivo (opcional)" class="campo flex-1 min-w-0" />
+            </div>
+            <button (click)="movimentar()" [disabled]="salvando()" class="btn-primario w-full mt-3">Registrar</button>
+          </div>
+
+          <!-- dados: histórico -->
+          <div>
+            <p class="secao-titulo">Histórico de movimentações</p>
+            <div class="lista">
+              @for (m of facade.historico(); track m.id) {
+                <div class="lista-item">
+                  <span class="lista-icone text-sm font-bold" [class.!bg-emerald-100]="m.tipo === 'entrada'" [class.!text-emerald-700]="m.tipo === 'entrada'" [class.!bg-red-100]="m.tipo === 'saida'" [class.!text-red-700]="m.tipo === 'saida'">
+                    {{ m.tipo === 'entrada' ? '+' : m.tipo === 'saida' ? '−' : '=' }}
+                  </span>
+                  <div class="flex-1 min-w-0 text-xs">
+                    <p class="text-slate-900 font-medium capitalize">{{ m.tipo === 'saida' ? 'saída' : m.tipo }} · {{ m.quantidade }}</p>
+                    <p class="text-slate-500 truncate">{{ m.motivo || 'sem motivo' }} · {{ m.em | date: 'dd/MM HH:mm' }}</p>
+                  </div>
+                  <p class="text-xs text-slate-500">saldo <strong class="text-slate-900">{{ m.saldoApos }}</strong></p>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="grid grid-cols-2 gap-2">
+            <button (click)="editar(item)" class="btn-secundario"><i class="pi pi-pencil text-xs"></i>Editar</button>
+            <button (click)="excluir()" class="btn-perigo"><i class="pi pi-trash text-xs"></i>Excluir</button>
+          </div>
+        </div>
+      }
+
+      @if (p === 'form') {
+        <div class="bg-slate-900 text-white px-5 py-4 rounded-t-2xl flex items-center justify-between">
+          <p class="text-base font-semibold">{{ editandoId ? 'Editar item' : 'Novo item' }}</p>
+          <button (click)="fechar()" aria-label="Fechar" class="text-slate-300"><i class="pi pi-times"></i></button>
+        </div>
+        <div class="px-4 mt-4 space-y-4">
+          <p class="texto-pequeno">Campos com * são obrigatórios. O mesmo medicamento com outro lote deve ser cadastrado como item separado.</p>
+          @if (erroPainel(); as e) { <div class="alerta-erro">{{ e }}</div> }
+          <form (ngSubmit)="salvar()" class="painel space-y-3">
+            <label class="campo-rotulo">Medicamento / insumo *
+              <input name="nome" [(ngModel)]="form.nome" required class="campo mt-1" />
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              <label class="campo-rotulo">Lote *<input name="lote" [(ngModel)]="form.lote" required class="campo mt-1" /></label>
+              <label class="campo-rotulo">Validade *<input name="validade" type="date" [(ngModel)]="form.validade" required class="campo mt-1" /></label>
+              <label class="campo-rotulo">Quantidade *<input name="quantidade" type="number" min="0" inputmode="numeric" [(ngModel)]="form.quantidade" required class="campo mt-1" /></label>
+              <label class="campo-rotulo">Unidade<input name="unidade" [(ngModel)]="form.unidade" class="campo mt-1" /></label>
+              <label class="campo-rotulo">Estoque mínimo<input name="min" type="number" min="0" inputmode="numeric" [(ngModel)]="form.estoqueMinimo" class="campo mt-1" /></label>
+              <label class="campo-rotulo">Localização<input name="loc" [(ngModel)]="form.localizacao" class="campo mt-1" /></label>
+              <label class="campo-rotulo">Código<input name="cod" [(ngModel)]="form.codigo" class="campo mt-1" /></label>
+              <label class="campo-rotulo">EAN<input name="ean" inputmode="numeric" [(ngModel)]="form.ean" class="campo mt-1" /></label>
+            </div>
+            <button type="submit" [disabled]="salvando()" class="btn-primario w-full">{{ salvando() ? 'Salvando…' : 'Salvar item' }}</button>
+          </form>
+        </div>
+      }
+    </div>
+  </div>
+}

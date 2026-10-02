@@ -1,0 +1,109 @@
+<div class="page">
+
+  <header class="page-header">
+    <h2>Conferir recebimento</h2>
+    <p>Compara a nota fiscal com o romaneio e lança no estoque</p>
+  </header>
+
+  <!-- INFORMAÇÃO -->
+  <div class="px-4 mt-4">
+    <app-ajuda titulo="Como funciona a conferência" chave="conferir">
+      <ol class="space-y-2">
+        <li class="flex gap-2"><span class="w-5 h-5 shrink-0 rounded-full bg-sky-600 text-white text-[11px] flex items-center justify-center">1</span><span><strong>Envie</strong> a nota fiscal (PDF ou foto) e, se tiver, o <strong>romaneio</strong>.</span></li>
+        <li class="flex gap-2"><span class="w-5 h-5 shrink-0 rounded-full bg-sky-600 text-white text-[11px] flex items-center justify-center">2</span><span><strong>Revise:</strong> o sistema compara produto, lote, validade e quantidade e aponta as divergências.</span></li>
+        <li class="flex gap-2"><span class="w-5 h-5 shrink-0 rounded-full bg-sky-600 text-white text-[11px] flex items-center justify-center">3</span><span><strong>Confirme:</strong> o que confere entra no estoque. Divergências só entram se você aceitar. Vencidos nunca entram.</span></li>
+      </ol>
+      <p>Sem romaneio, a nota é aceita sozinha — mas não há com o que comparar.</p>
+    </app-ajuda>
+  </div>
+
+  @if (erro(); as e) {
+    <div class="px-4 mt-4"><div class="alerta-erro"><i class="pi pi-exclamation-triangle mr-1"></i>{{ e }}</div></div>
+  }
+
+  <!-- ABAS -->
+  <div class="px-4 mt-4">
+    <div class="grid grid-cols-3 bg-slate-200 rounded-lg p-1 text-sm font-medium" role="tablist">
+      <button role="tab" (click)="aba.set('nova')" [attr.aria-selected]="aba() === 'nova'" class="py-2 rounded-md" [class.bg-white]="aba() === 'nova'" [class.shadow-sm]="aba() === 'nova'" [class.text-slate-900]="aba() === 'nova'" [class.text-slate-500]="aba() !== 'nova'">Nova</button>
+      <button role="tab" (click)="aba.set('exemplos')" [attr.aria-selected]="aba() === 'exemplos'" class="py-2 rounded-md" [class.bg-white]="aba() === 'exemplos'" [class.shadow-sm]="aba() === 'exemplos'" [class.text-slate-900]="aba() === 'exemplos'" [class.text-slate-500]="aba() !== 'exemplos'">Exemplos</button>
+      <button role="tab" (click)="aba.set('historico')" [attr.aria-selected]="aba() === 'historico'" class="py-2 rounded-md" [class.bg-white]="aba() === 'historico'" [class.shadow-sm]="aba() === 'historico'" [class.text-slate-900]="aba() === 'historico'" [class.text-slate-500]="aba() !== 'historico'">Histórico@if (conferencias().length) { <span class="text-[11px] text-slate-400">({{ conferencias().length }})</span> }</button>
+    </div>
+  </div>
+
+  <!-- AÇÃO: nova conferência -->
+  @if (aba() === 'nova') {
+  <div class="secao">
+    <p class="secao-titulo">Nova conferência</p>
+    <div class="painel">
+      <p class="texto-pequeno mb-3">PDF ou foto de até 15 MB. PDF com texto dá leitura exata; foto depende do OCR e pode errar letras.</p>
+      <div class="space-y-2">
+        <label class="flex items-center gap-3 border-2 border-dashed rounded-md px-3 py-3.5 text-sm cursor-pointer" [class.border-slate-300]="!nota()" [class.bg-slate-50]="!nota()" [class.border-emerald-400]="nota()" [class.bg-emerald-50]="nota()">
+          <i class="pi" [class.pi-file-pdf]="!nota()" [class.pi-check-circle]="nota()" [class.text-emerald-600]="nota()"></i>
+          <span class="flex-1 min-w-0 truncate"><span class="text-[10px] uppercase font-bold text-slate-500 block">1 · Nota fiscal (obrigatória)</span>{{ nota()?.name ?? 'Toque para escolher' }}</span>
+          <input type="file" accept="application/pdf,image/*" class="hidden" (change)="escolher($event, 'nota')" />
+        </label>
+        <label class="flex items-center gap-3 border-2 border-dashed rounded-md px-3 py-3.5 text-sm cursor-pointer" [class.border-slate-300]="!documento()" [class.bg-slate-50]="!documento()" [class.border-emerald-400]="documento()" [class.bg-emerald-50]="documento()">
+          <i class="pi" [class.pi-file]="!documento()" [class.pi-check-circle]="documento()" [class.text-emerald-600]="documento()"></i>
+          <span class="flex-1 min-w-0 truncate"><span class="text-[10px] uppercase font-bold text-slate-500 block">2 · Romaneio (opcional)</span>{{ documento()?.name ?? 'Toque para escolher' }}</span>
+          <input type="file" accept="application/pdf,image/*" class="hidden" (change)="escolher($event, 'documento')" />
+        </label>
+      </div>
+      <button (click)="enviar()" [disabled]="!nota() || enviando()" class="btn-primario w-full mt-3">
+        @if (enviando() === 'upload') { <i class="pi pi-spin pi-spinner"></i>Processando… } @else { Conferir arquivos }
+      </button>
+    </div>
+  </div>
+
+  }
+
+  <!-- LISTA: exemplos -->
+  @if (aba() === 'exemplos') {
+    <div class="secao">
+      <p class="secao-titulo">Testar com exemplos</p>
+      <div class="lista">
+        @for (m of mocks(); track m.id) {
+          <button (click)="usarMock(m)" [disabled]="!!enviando()" class="lista-item lista-item-link disabled:opacity-50">
+            <span class="lista-icone"><i class="pi pi-play text-sm"></i></span>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-slate-900">{{ m.titulo }}</p>
+              <p class="text-xs text-slate-500 mt-0.5">{{ m.descricao }}</p>
+            </div>
+            @if (enviando() === m.id) { <i class="pi pi-spin pi-spinner text-slate-400"></i> } @else { <i class="pi pi-angle-right text-slate-300"></i> }
+          </button>
+        }
+      </div>
+    </div>
+  }
+
+  <!-- LISTA: histórico -->
+  @if (aba() === 'historico') {
+  <div class="secao">
+    <p class="secao-titulo">Histórico de conferências</p>
+    @if (carregando()) {
+      <app-skeleton height="64px"></app-skeleton>
+    } @else if (!conferencias().length) {
+      <div class="lista-vazia">
+        <i class="pi pi-check-square text-3xl text-slate-300"></i>
+        <p class="text-sm font-medium text-slate-700 mt-3">Nenhuma conferência ainda.</p>
+        <p class="texto-pequeno mt-1">Envie uma nota acima ou teste com um dos exemplos.</p>
+      </div>
+    } @else {
+      <div class="lista">
+        @for (c of conferencias(); track c.id) {
+          <div (click)="abrir(c)" class="lista-item lista-item-link">
+            <span class="lista-icone"><i class="pi pi-file text-lg"></i></span>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-semibold text-slate-900">NF {{ c.nota.numero ?? '—' }}</p>
+              <p class="text-xs text-slate-500 truncate">{{ c.nota.fornecedor ?? c.arquivos.nota }}</p>
+              <p class="text-[11px] text-slate-400 mt-0.5">{{ c.resumo.total }} itens · {{ c.criadaEm | date: 'dd/MM/yyyy HH:mm' }}</p>
+              <div class="mt-1.5"><app-tag [label]="rotulo(c)" [color]="cor(c)"></app-tag></div>
+            </div>
+            <button (click)="remover(c, $event)" class="w-9 h-9 flex items-center justify-center text-slate-400 active:text-red-600" aria-label="Excluir"><i class="pi pi-trash text-sm"></i></button>
+            <i class="pi pi-angle-right text-slate-300"></i>
+          </div>
+        }
+      </div>
+    }
+  </div>
+  }
+</div>

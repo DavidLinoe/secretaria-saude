@@ -6,6 +6,6 @@ export class HomeApiService {
   constructor(private http: HttpService) {}
 
   async getStatus(): Promise<string> {
-    return this.http.get<string>('status');
+    return this.http.getText('status');
   }
 }

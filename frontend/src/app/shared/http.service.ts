@@ -23,8 +23,17 @@ export class HttpService {
     return firstValueFrom(this.httpClient.get<T>(this.baseUrl + url).pipe(timeout(timeoutMs)));
   }
 
+  /** Para rotas que respondem texto puro (ex.: GET / do backend) — o parse JSON padrão falharia. */
+  getText(url: string, timeoutMs: number = DEFAULT_TIMEOUT_MS): Promise<string> {
+    return firstValueFrom(this.httpClient.get(this.baseUrl + url, { responseType: 'text' }).pipe(timeout(timeoutMs)));
+  }
+
   post<T>(url: string, body: unknown, timeoutMs: number = DEFAULT_TIMEOUT_MS): Promise<T> {
     return firstValueFrom(this.httpClient.post<T>(this.baseUrl + url, body).pipe(timeout(timeoutMs)));
+  }
+
+  put<T>(url: string, body: unknown, timeoutMs: number = DEFAULT_TIMEOUT_MS): Promise<T> {
+    return firstValueFrom(this.httpClient.put<T>(this.baseUrl + url, body).pipe(timeout(timeoutMs)));
   }
 
   delete<T>(url: string, timeoutMs: number = DEFAULT_TIMEOUT_MS): Promise<T> {

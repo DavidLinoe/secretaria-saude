@@ -1,6 +1,7 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
+import { AjudaComponent } from '../../../shared/ajuda.component';
 import { PhotoPickerComponent } from '../../../shared/photo-picker.component';
 import { SkeletonComponent } from '../../../shared/skeleton.component';
 import { TagComponent } from '../../../shared/tag.component';
@@ -18,7 +19,7 @@ interface Captura {
   selector: 'app-escanear',
   standalone: true,
   templateUrl: './escanear.component.html',
-  imports: [CommonModule, PhotoPickerComponent, SkeletonComponent, TagComponent],
+  imports: [CommonModule, AjudaComponent, PhotoPickerComponent, SkeletonComponent, TagComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EscanearComponent implements OnInit {

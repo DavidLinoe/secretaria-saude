@@ -1,56 +1,89 @@
-<div class="min-h-screen bg-white pb-24">
+<div class="page">
 
-  <!-- Header -->
-  <div class="border-b border-slate-200 px-5 pt-12 pb-5">
-    <h2 class="text-xl font-semibold text-slate-900">Secretaria da Saúde</h2>
-    <p class="text-sm text-slate-500 mt-0.5">Conferência de nota fiscal e controle de estoque</p>
+  <header class="page-header">
+    <h2>Secretaria da Saúde</h2>
+    <p>Conferência de nota fiscal e controle de estoque de medicamentos</p>
+  </header>
+
+  <!-- SITUAÇÃO: números clicáveis -->
+  <div class="grid grid-cols-3 gap-2 px-4 -mt-3">
+    <a routerLink="/conferencia" class="kpi" [class.!border-amber-400]="pendentes()">
+      <p class="kpi-valor" [class.!text-amber-600]="pendentes()">{{ pendentes() ?? '–' }}</p>
+      <p class="kpi-rotulo">conferências pendentes</p>
+    </a>
+    <a routerLink="/estoque" class="kpi">
+      <p class="kpi-valor">{{ resumo()?.totalUnidades ?? '–' }}</p>
+      <p class="kpi-rotulo">unidades em estoque</p>
+    </a>
+    <a routerLink="/estoque" class="kpi" [class.!border-red-400]="resumo()?.vencidos">
+      <p class="kpi-valor" [class.!text-red-600]="resumo()?.vencidos">{{ resumo() ? resumo()!.vencidos + resumo()!.vencendo : '–' }}</p>
+      <p class="kpi-rotulo">lotes vencidos ou vencendo</p>
+    </a>
   </div>
 
-  <!-- Status de conexão com o backend -->
-  <div class="px-5 py-4 border-b border-slate-200">
-    @if (facade.loading$ | async) {
-      <app-skeleton height="20px"></app-skeleton>
-    } @else {
-      @if (facade.status$ | async; as status) {
-        <div class="flex items-center justify-between">
-          <app-tag
-            [label]="status.online ? 'Backend conectado' : 'Backend indisponível'"
-            [color]="status.online ? 'success' : 'danger'"
-          ></app-tag>
-          @if (!status.online) {
-            <button (click)="retryStatus()" class="text-xs font-medium text-slate-600 underline underline-offset-2">
-              Tentar novamente
-            </button>
-          }
-        </div>
-        <p class="text-xs text-slate-400 mt-1">{{ status.message }}</p>
-      }
-    }
+  <!-- TEXTO: o que é -->
+  <div class="secao">
+    <p class="secao-titulo">Para que serve</p>
+    <p class="texto">
+      Quando uma carga de medicamentos chega, alguém precisa conferir se o que a <strong class="text-slate-900">nota fiscal</strong> diz bate com o
+      que o fornecedor listou no <strong class="text-slate-900">romaneio</strong> — lote, validade e quantidade. Este app faz essa comparação
+      automaticamente e só lança no estoque o que foi verificado.
+    </p>
   </div>
 
-  <!-- Fluxo do produto -->
-  <div class="px-5 pt-5">
-    <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Fluxo de recebimento</p>
-
-    <div class="divide-y divide-slate-200 border-y border-slate-200">
-      @for (etapa of etapas; track etapa.title) {
-        <a [routerLink]="etapa.route" class="flex items-center gap-3 py-3.5">
-          <i class="pi {{ etapa.icon }} text-slate-400 text-base w-5 text-center"></i>
+  <!-- LISTA DE NAVEGAÇÃO -->
+  <div class="secao">
+    <p class="secao-titulo">Por onde começar</p>
+    <div class="lista">
+      @for (etapa of etapas; track etapa.title; let i = $index) {
+        <a [routerLink]="etapa.route" class="lista-item lista-item-link">
+          <span class="lista-icone !bg-slate-900 !text-white text-sm font-bold">{{ i + 1 }}</span>
           <div class="flex-1 min-w-0">
-            <p class="text-sm font-medium text-slate-900">{{ etapa.title }}</p>
-            <p class="text-xs text-slate-500 mt-0.5">{{ etapa.description }}</p>
+            <p class="text-sm font-semibold text-slate-900">{{ etapa.title }}</p>
+            <p class="text-xs text-slate-500 mt-0.5 leading-relaxed">{{ etapa.description }}</p>
           </div>
-          <i class="pi pi-angle-right text-slate-300 text-sm"></i>
+          <i class="pi pi-angle-right text-slate-300"></i>
         </a>
       }
     </div>
   </div>
 
-  <!-- Nota de escopo -->
-  <div class="px-5 mt-5">
-    <p class="text-xs text-slate-400">
-      MVP: Home e Escanear implementadas. Bipar/estoque ainda não têm tela própria.
-    </p>
+  <!-- INFORMAÇÃO -->
+  <div class="px-4 mt-6">
+    <app-ajuda titulo="Glossário rápido" chave="home-glossario">
+      <p><strong>Nota fiscal (DANFE):</strong> documento fiscal da venda; lista produtos, lotes e quantidades faturados.</p>
+      <p><strong>Romaneio:</strong> lista de conferência que acompanha a carga, feita pelo fornecedor.</p>
+      <p><strong>Lote:</strong> grupo de unidades fabricadas juntas; define a validade e permite rastrear problemas.</p>
+      <p><strong>Divergência:</strong> nota e romaneio discordam em quantidade, lote ou validade — precisa de decisão humana.</p>
+      <p><strong>Validade curta:</strong> vence em até 180 dias. <strong>Vencido:</strong> passou da validade e é bloqueado.</p>
+    </app-ajuda>
+  </div>
+
+  <!-- AVISO -->
+  <div class="px-4 mt-3">
+    <div class="alerta-aviso">
+      <strong>Ambiente de demonstração.</strong> Os dados são de teste e os exemplos são fictícios. Para recomeçar do zero, use
+      <a routerLink="/reset" class="underline underline-offset-2 font-medium">Resetar ambiente</a>.
+    </div>
+  </div>
+
+  <!-- STATUS do servidor -->
+  <div class="px-4 mt-5">
+    @if (facade.loading$ | async) {
+      <app-skeleton height="20px"></app-skeleton>
+    } @else {
+      @if (facade.status$ | async; as status) {
+        <div class="flex items-center justify-between">
+          <app-tag [label]="status.online ? 'Servidor conectado' : 'Servidor indisponível'" [color]="status.online ? 'success' : 'danger'"></app-tag>
+          @if (!status.online) {
+            <button (click)="retryStatus()" class="text-xs font-medium text-slate-600 underline underline-offset-2">Tentar novamente</button>
+          }
+        </div>
+        @if (!status.online) {
+          <p class="texto-pequeno mt-1">Sem conexão: o app precisa do backend rodando para conferir notas e consultar o estoque.</p>
+        }
+      }
+    }
   </div>
 
 </div>

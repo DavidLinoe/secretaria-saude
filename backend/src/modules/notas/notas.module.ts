@@ -8,5 +8,6 @@ import { NotasRepository } from './notas.repository';
   imports: [PythonBridgeModule],
   controllers: [NotasController],
   providers: [NotasService, NotasRepository],
+  exports: [NotasService],
 })
 export class NotasModule {}

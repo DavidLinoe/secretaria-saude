@@ -1,0 +1,84 @@
+<div class="page">
+
+  <header class="page-header">
+    <h2>Documentos</h2>
+    <p>Notas fiscais e romaneios: exemplos, importados e das conferências</p>
+  </header>
+
+  <!-- INFORMAÇÃO -->
+  <div class="px-4 mt-4">
+    <app-ajuda titulo="O que são estes documentos?" chave="documentos">
+      <p>Aqui ficam os arquivos usados nas conferências: a <strong>nota fiscal</strong> (DANFE) e o <strong>romaneio</strong>, a lista do que o fornecedor diz ter enviado.</p>
+      <p><strong>Exemplo:</strong> arquivos fictícios prontos para testar. <strong>Importado:</strong> os que você salvou aqui. <strong>Conferência:</strong> os originais enviados ao conferir uma nota.</p>
+      <p>Importar não lança nada no estoque — é só guardar e visualizar.</p>
+    </app-ajuda>
+  </div>
+
+  <!-- AÇÃO: importar -->
+  <div class="secao">
+    <p class="secao-titulo">Importar arquivo</p>
+    <div class="painel">
+      <p class="texto-pequeno mb-3">PDF, JPG ou PNG de até 15 MB. Escolha o tipo para facilitar a busca depois.</p>
+      <label class="flex items-center gap-3 border-2 border-dashed border-slate-300 rounded-md px-3 py-3.5 text-sm text-slate-600 cursor-pointer bg-slate-50">
+        <i class="pi pi-upload text-slate-500"></i>
+        <span class="flex-1 min-w-0 truncate">{{ arquivoEscolhido()?.name ?? 'Toque para escolher o arquivo' }}</span>
+        <input type="file" accept="application/pdf,image/*" class="hidden" (change)="escolher($event)" />
+      </label>
+      <div class="flex gap-2 mt-3">
+        <select [(ngModel)]="tipoImport" class="campo flex-1">
+          <option value="nota_fiscal">Nota fiscal</option>
+          <option value="romaneio">Romaneio</option>
+          <option value="outro">Outro</option>
+        </select>
+        <button (click)="importar()" [disabled]="!arquivoEscolhido() || enviando()" class="btn-primario px-6">
+          @if (enviando()) { <i class="pi pi-spin pi-spinner"></i> } @else { Salvar }
+        </button>
+      </div>
+    </div>
+  </div>
+
+  @if (erro(); as e) {
+    <div class="px-4 mt-4"><div class="alerta-erro"><i class="pi pi-exclamation-triangle mr-1"></i>{{ e }}</div></div>
+  }
+
+  <!-- LISTA DE DADOS -->
+  <div class="secao">
+    <p class="secao-titulo">Arquivos</p>
+    <div class="flex gap-2 overflow-x-auto pb-3">
+      @for (f of filtros; track f.valor) {
+        <button (click)="filtro.set(f.valor)" class="chip" [class.chip-ativo]="filtro() === f.valor">{{ f.label }}</button>
+      }
+    </div>
+
+    @if (carregando() && !documentos().length) {
+      <div class="space-y-2"><app-skeleton height="64px"></app-skeleton><app-skeleton height="64px"></app-skeleton></div>
+    } @else if (!visiveis().length) {
+      <div class="lista-vazia">
+        <i class="pi pi-file text-3xl text-slate-300"></i>
+        <p class="text-sm font-medium text-slate-700 mt-3">Nenhum documento nesta categoria.</p>
+        <p class="texto-pequeno mt-1">Importe um PDF ou foto acima, ou veja a categoria "Exemplos".</p>
+      </div>
+    } @else {
+      <div class="lista">
+        @for (d of visiveis(); track d.id) {
+          <div (click)="aberto.set(d)" class="lista-item lista-item-link">
+            <span class="lista-icone"><i class="pi text-lg" [class.pi-file-pdf]="d.mimetype === 'application/pdf'" [class.pi-image]="d.mimetype !== 'application/pdf'"></i></span>
+            <div class="flex-1 min-w-0">
+              <p class="text-sm font-semibold text-slate-900 truncate">{{ d.nome }}</p>
+              <p class="text-xs text-slate-500 mt-0.5">{{ tipoRotulo[d.tipo] }} · {{ tamanho(d.tamanho) }}@if (d.criadoEm) { · {{ d.criadoEm | date: 'dd/MM HH:mm' }} }</p>
+              <div class="mt-1"><app-tag [label]="origemRotulo[d.origem]" [color]="d.origem === 'exemplo' ? 'info' : d.origem === 'importado' ? 'success' : 'warning'"></app-tag></div>
+            </div>
+            @if (d.removivel) {
+              <button (click)="remover(d, $event)" class="w-9 h-9 flex items-center justify-center text-slate-400 active:text-red-600" aria-label="Excluir"><i class="pi pi-trash text-sm"></i></button>
+            }
+            <i class="pi pi-eye text-slate-300"></i>
+          </div>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+@if (aberto(); as d) {
+  <app-visualizador [url]="d.url" [nome]="d.nome" [mimetype]="d.mimetype" (fechar)="aberto.set(null)"></app-visualizador>
+}

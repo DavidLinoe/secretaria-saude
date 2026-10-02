@@ -1,0 +1,127 @@
+<div class="page !pb-44">
+
+  <header class="page-header">
+    <a routerLink="/conferencia" class="text-xs text-slate-300"><i class="pi pi-angle-left mr-0.5"></i>Conferências</a>
+    @if (conferencia(); as c) {
+      <h2 class="mt-1">NF {{ c.nota.numero ?? '—' }}</h2>
+      <p>{{ c.nota.fornecedor ?? 'Fornecedor não identificado' }}</p>
+      <p class="!text-xs !text-slate-400">Emissão {{ dataBr(c.nota.emissao) }} · {{ c.resumo.total }} itens</p>
+      <div class="flex items-center gap-4 mt-3 text-xs">
+        @if (c.urls?.nota) { <button (click)="verArquivo.set({ url: c.urls!.nota!, nome: c.arquivos.nota })" class="text-white underline underline-offset-2"><i class="pi pi-eye mr-1"></i>Ver nota</button> }
+        @if (c.urls?.documento) { <button (click)="verArquivo.set({ url: c.urls!.documento!, nome: c.arquivos.documento ?? 'Documento' })" class="text-white underline underline-offset-2"><i class="pi pi-eye mr-1"></i>Ver romaneio</button> }
+        @if (c.status !== 'pendente') { <app-tag [label]="c.status === 'confirmada' ? 'Entrada lançada' : 'Rejeitada'" [color]="c.status === 'confirmada' ? 'success' : 'danger'"></app-tag> }
+      </div>
+    }
+  </header>
+
+  @if (erro(); as e) {
+    <div class="px-4 mt-4"><div class="alerta-erro"><i class="pi pi-exclamation-triangle mr-1"></i>{{ e }}</div></div>
+  }
+
+  @if (conferencia(); as c) {
+    <!-- RESUMO -->
+    <div class="grid grid-cols-3 gap-2 px-4 -mt-3">
+      <div class="kpi"><p class="kpi-valor !text-emerald-600">{{ c.resumo.ok }}</p><p class="kpi-rotulo">conferem</p></div>
+      <div class="kpi" [class.!border-amber-400]="c.resumo.divergentes"><p class="kpi-valor" [class.!text-amber-600]="c.resumo.divergentes">{{ c.resumo.divergentes }}</p><p class="kpi-rotulo">divergem</p></div>
+      <div class="kpi" [class.!border-red-400]="c.resumo.bloqueadas"><p class="kpi-valor" [class.!text-red-600]="c.resumo.bloqueadas">{{ c.resumo.bloqueadas }}</p><p class="kpi-rotulo">vencidos</p></div>
+    </div>
+
+    <!-- INFORMAÇÃO -->
+    <div class="px-4 mt-4">
+      <app-ajuda titulo="Como revisar esta conferência" chave="detalhe">
+        <p>Cada cartão é um item, com os dados da <strong>nota</strong> (esquerda) e do <strong>romaneio</strong> (direita).</p>
+        <ul class="space-y-1">
+          <li><strong>Confere</strong> — tudo igual. Entra sozinho.</li>
+          <li><strong>Diverge</strong> (quantidade, lote ou validade) — confira a carga física e use <em>Aceitar mesmo assim</em> com a quantidade realmente recebida.</li>
+          <li><strong>Só na nota / só no documento</strong> — o item aparece em apenas um papel: falta ou excesso na entrega.</li>
+          <li><strong>Vencido</strong> — bloqueado, nunca entra no estoque. Validade curta (até 180 dias) só gera alerta.</li>
+        </ul>
+        <p>Na barra inferior, <strong>Confirmar entrada</strong> lança o que confere + o que você aceitou. <strong>Rejeitar</strong> descarta tudo.</p>
+      </app-ajuda>
+    </div>
+
+    @for (aviso of c.avisos; track aviso) {
+      <div class="px-4 mt-3"><div class="alerta-aviso"><i class="pi pi-exclamation-circle mr-1"></i>{{ aviso }}</div></div>
+    }
+
+    <!-- LISTA DE DADOS: itens comparados -->
+    <div class="secao">
+      <p class="secao-titulo">Itens comparados</p>
+      <div class="space-y-3">
+        @for (l of c.linhas; track l.chave) {
+          <div class="bg-white rounded-lg shadow-sm border border-slate-200 border-l-4 overflow-hidden"
+            [class.!border-l-emerald-500]="cor(l) === 'success'" [class.!border-l-amber-500]="cor(l) === 'warning'" [class.!border-l-red-600]="cor(l) === 'danger'">
+            <div class="flex items-start justify-between gap-3 px-4 pt-3">
+              <p class="text-sm font-semibold text-slate-900">{{ titulo(l) }}</p>
+              <app-tag [label]="rotulo(l)" [color]="cor(l)" class="shrink-0"></app-tag>
+            </div>
+
+            <div class="grid grid-cols-2 gap-px bg-slate-200 mt-3 border-y border-slate-200 text-xs">
+              <div class="bg-white px-4 py-2.5">
+                <p class="text-[10px] uppercase font-bold tracking-wide text-slate-400">Nota fiscal</p>
+                @if (l.nota) {
+                  <p class="text-slate-800 mt-1">Lote <strong>{{ l.nota.lote }}</strong></p>
+                  <p class="text-slate-800">Qtd <strong>{{ l.nota.quantidade }}</strong> {{ l.nota.unidade }}</p>
+                  <p class="text-slate-500">Val. {{ dataBr(l.nota.validade) }}</p>
+                } @else { <p class="text-slate-300 mt-1">não consta</p> }
+              </div>
+              <div class="bg-white px-4 py-2.5">
+                <p class="text-[10px] uppercase font-bold tracking-wide text-slate-400">Romaneio</p>
+                @if (l.documento) {
+                  <p class="text-slate-800 mt-1">Lote <strong>{{ l.documento.lote }}</strong></p>
+                  <p class="text-slate-800">Qtd <strong>{{ l.documento.quantidade }}</strong> {{ l.documento.unidade }}</p>
+                  <p class="text-slate-500">Val. {{ dataBr(l.documento.validade) }}</p>
+                } @else { <p class="text-slate-300 mt-1">não consta</p> }
+              </div>
+            </div>
+
+            @if (l.divergencias.length || l.alertas.length) {
+              <div class="px-4 py-2.5 space-y-1 text-xs">
+                @for (d of l.divergencias; track d) { <p class="text-amber-800"><i class="pi pi-exclamation-circle mr-1"></i>{{ d }}</p> }
+                @for (a of l.alertas; track a) { <p [class.text-red-700]="l.bloqueada" [class.text-amber-800]="!l.bloqueada"><i class="pi pi-clock mr-1"></i>{{ a }}</p> }
+              </div>
+            }
+
+            @if (c.status === 'pendente' && !automatica(l) && !l.bloqueada) {
+              <div class="flex items-center gap-3 px-4 py-3 bg-slate-50 border-t border-slate-200">
+                <button (click)="alternar(l)" class="text-xs py-2 px-3 rounded-md font-medium" [class.btn-primario]="l.chave in aceitas()" [class.btn-secundario]="!(l.chave in aceitas())">
+                  {{ l.chave in aceitas() ? '✓ Aceito' : 'Aceitar mesmo assim' }}
+                </button>
+                @if (l.chave in aceitas()) {
+                  <label class="text-xs text-slate-600 flex items-center gap-2">Qtd. recebida
+                    <input type="number" min="1" inputmode="numeric" [ngModel]="aceitas()[l.chave]" (ngModelChange)="definirQtd(l, $event)" class="campo !w-20 !py-1" />
+                  </label>
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  } @else if (!erro()) {
+    <div class="px-4 py-4 space-y-2"><app-skeleton height="90px"></app-skeleton><app-skeleton height="90px"></app-skeleton></div>
+  }
+</div>
+
+@if (conferencia(); as c) {
+  <!-- AÇÕES -->
+  <div class="fixed bottom-14 left-0 right-0 bg-white border-t-2 border-slate-900 p-4 z-40 shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
+    @if (c.status === 'pendente') {
+      <p class="texto-pequeno mb-2"><strong class="text-slate-900">{{ totalEntradas(c) }} item(ns)</strong> entrarão no estoque. Divergentes só entram se aceitos; vencidos nunca entram.</p>
+      <div class="flex gap-2">
+        <button (click)="rejeitar()" [disabled]="processando()" class="btn-perigo">Rejeitar</button>
+        <button (click)="confirmar()" [disabled]="processando() || !totalEntradas(c)" class="btn-primario flex-1">
+          {{ processando() ? 'Lançando…' : 'Confirmar entrada' }}
+        </button>
+      </div>
+    } @else if (c.status === 'confirmada') {
+      <button (click)="irEstoque()" class="btn-primario w-full">Ver estoque</button>
+    } @else {
+      <a routerLink="/conferencia" class="btn-secundario w-full">Voltar às conferências</a>
+    }
+  </div>
+}
+
+@if (verArquivo(); as v) {
+  <app-visualizador [url]="v.url" [nome]="v.nome" (fechar)="verArquivo.set(null)"></app-visualizador>
+}

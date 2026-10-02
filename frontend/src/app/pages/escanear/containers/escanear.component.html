@@ -1,20 +1,25 @@
-<div class="min-h-screen bg-white pb-24">
+<div class="page">
 
   <!-- Header -->
-  <div class="border-b border-slate-200 px-5 pt-12 pb-5">
-    <h2 class="text-xl font-semibold text-slate-900">Escanear nota</h2>
-    <p class="text-sm text-slate-500 mt-0.5">Foto da nota fiscal — processada pela API de OCR/parsing</p>
+  <header class="page-header">
+    <h2>Escanear nota</h2>
+    <p>Fluxo opcional: foto enviada ao serviço externo de OCR</p>
+  </header>
+  <div class="px-4 mt-4">
+    <app-ajuda titulo="Quando usar esta tela" chave="escanear">
+      <p>Esta tela envia fotos ao serviço Python de OCR e só registra o resultado — <strong>não compara nem lança no estoque</strong>. Para o fluxo completo, use a aba Conferir.</p>
+    </app-ajuda>
   </div>
 
   <!-- Erro -->
   @if (facade.erro$ | async; as erro) {
-    <div class="mx-5 mt-4 border border-red-200 bg-red-50 text-red-800 text-xs p-3">
+    <div class="alerta-erro mx-4 mt-4">
       <i class="pi pi-exclamation-triangle mr-1"></i>{{ erro }}
     </div>
   }
 
   <!-- Foto única -->
-  <div class="px-5 py-4 border-b border-slate-200">
+  <div class="painel mx-4 mt-4">
     <p class="text-sm font-medium text-slate-900">Foto única</p>
     <p class="text-xs text-slate-500 mb-3">Envia e processa uma nota imediatamente</p>
 
@@ -29,7 +34,7 @@
   </div>
 
   <!-- Lote de fotos -->
-  <div class="px-5 py-4 border-b border-slate-200">
+  <div class="painel mx-4 mt-4">
     <p class="text-sm font-medium text-slate-900">Lote de fotos</p>
     <p class="text-xs text-slate-500 mb-3">Várias páginas/itens da mesma nota, enviados de uma vez</p>
 
@@ -55,8 +60,8 @@
   </div>
 
   <!-- Histórico (CRUD de leitura) -->
-  <div class="px-5 pt-4">
-    <p class="text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">Notas enviadas</p>
+  <div class="secao">
+    <p class="secao-titulo">Notas enviadas</p>
 
     @if (facade.loadingLista$ | async) {
       <div class="space-y-2 py-2">
@@ -65,9 +70,9 @@
       </div>
     } @else {
       @if ((facade.notas$ | async)?.length) {
-        <div class="divide-y divide-slate-200 border-y border-slate-200">
+        <div class="lista">
           @for (nota of facade.notas$ | async; track nota.id) {
-            <div class="flex items-start justify-between gap-3 py-3">
+            <div class="lista-item items-start justify-between">
               <div class="min-w-0">
                 <p class="text-sm font-medium text-slate-900">{{ adapter.tipoLabel(nota) }}</p>
                 <p class="text-xs text-slate-500 mt-0.5 truncate">{{ nota.arquivos.join(', ') }}</p>

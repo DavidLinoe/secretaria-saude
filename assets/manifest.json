@@ -1,0 +1,56 @@
+[
+  {
+    "id": "set-01-sem-divergencia",
+    "titulo": "Entrega completa, sem divergência",
+    "descricao": "Nota e romaneio batem em todos os itens.",
+    "fornecedor": "FarmaDist Distribuidora de Medicamentos LTDA",
+    "nota": "notas-fiscais/set-01-sem-divergencia.pdf",
+    "notaImagem": "notas-fiscais/set-01-sem-divergencia.png",
+    "documento": "documentos/set-01-sem-divergencia.pdf"
+  },
+  {
+    "id": "set-02-quantidade-divergente",
+    "titulo": "Quantidade divergente",
+    "descricao": "Romaneio registra menos caixas de Metformina e Omeprazol que a nota.",
+    "fornecedor": "MedLog Comércio Hospitalar S.A.",
+    "nota": "notas-fiscais/set-02-quantidade-divergente.pdf",
+    "notaImagem": "notas-fiscais/set-02-quantidade-divergente.png",
+    "documento": "documentos/set-02-quantidade-divergente.pdf"
+  },
+  {
+    "id": "set-03-lote-e-validade",
+    "titulo": "Lote e validade divergentes",
+    "descricao": "Lote da Insulina difere entre os documentos; validade do Soro é menor que a da nota.",
+    "fornecedor": "BioSaúde Produtos Farmacêuticos LTDA",
+    "nota": "notas-fiscais/set-03-lote-e-validade.pdf",
+    "notaImagem": "notas-fiscais/set-03-lote-e-validade.png",
+    "documento": "documentos/set-03-lote-e-validade.pdf"
+  },
+  {
+    "id": "set-04-item-faltando-e-extra",
+    "titulo": "Item faltando e item extra",
+    "descricao": "Seringas constam só na nota; Luvas constam só no romaneio.",
+    "fornecedor": "Hospitalar Norte Distribuição LTDA",
+    "nota": "notas-fiscais/set-04-item-faltando-e-extra.pdf",
+    "notaImagem": "notas-fiscais/set-04-item-faltando-e-extra.png",
+    "documento": "documentos/set-04-item-faltando-e-extra.pdf"
+  },
+  {
+    "id": "set-05-validade-curta",
+    "titulo": "Medicamento vencido / validade curta",
+    "descricao": "Nota e romaneio batem, mas um lote vence em menos de 6 meses e outro já venceu.",
+    "fornecedor": "FarmaDist Distribuidora de Medicamentos LTDA",
+    "nota": "notas-fiscais/set-05-validade-curta.pdf",
+    "notaImagem": "notas-fiscais/set-05-validade-curta.png",
+    "documento": "documentos/set-05-validade-curta.pdf"
+  },
+  {
+    "id": "set-06-carga-grande",
+    "titulo": "Carga grande com várias divergências",
+    "descricao": "8 itens; mistura de quantidade, lote e item faltando.",
+    "fornecedor": "Rede Nacional de Medicamentos S.A.",
+    "nota": "notas-fiscais/set-06-carga-grande.pdf",
+    "notaImagem": "notas-fiscais/set-06-carga-grande.png",
+    "documento": "documentos/set-06-carga-grande.pdf"
+  }
+]

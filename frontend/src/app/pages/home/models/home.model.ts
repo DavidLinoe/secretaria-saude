@@ -12,21 +12,21 @@ export interface FluxoEtapa {
 
 export const FLUXO_ETAPAS: FluxoEtapa[] = [
   {
-    icon: 'pi-file-pdf',
-    title: 'Escanear nota',
-    description: 'Foto da nota fiscal — extrai e cadastra os itens no estoque',
-    route: '/escanear',
-  },
-  {
-    icon: 'pi-qrcode',
-    title: 'Bipar conferência',
-    description: 'Compara lote e quantidade recebidos com o que a nota declarou',
-    route: '/bipar',
+    icon: 'pi-check-square',
+    title: 'Conferir recebimento',
+    description: 'Envie a nota fiscal e o romaneio (PDF ou foto). O sistema compara item, lote, validade e quantidade e mostra o que não bate.',
+    route: '/conferencia',
   },
   {
     icon: 'pi-box',
-    title: 'Ver estoque',
-    description: 'Saldo atual de medicamentos e insumos, por lote e validade',
+    title: 'Estoque',
+    description: 'Confirmada a conferência, os itens entram aqui. Consulte saldo por lote, dê saída, ajuste ou cadastre manualmente.',
     route: '/estoque',
+  },
+  {
+    icon: 'pi-camera',
+    title: 'Escanear nota (serviço externo)',
+    description: 'Opcional: envia fotos da nota ao serviço Python de OCR. Para o fluxo principal, use Conferir.',
+    route: '/escanear',
   },
 ];

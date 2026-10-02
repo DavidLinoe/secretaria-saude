@@ -58,6 +58,10 @@ export class NotasService {
     return nota;
   }
 
+  resetar(): void {
+    this.repository.clear();
+  }
+
   remover(id: string): void {
     const removed = this.repository.remove(id);
     if (!removed) throw new NotFoundException('Nota não encontrada');
