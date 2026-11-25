@@ -2,6 +2,7 @@ import { BadRequestException, ConflictException, Injectable, NotFoundException }
 import { randomUUID } from 'crypto';
 import { JsonCollection } from '../../common/json-store';
 import { diasAte, normalizarLote, normalizarNome, validadeParaIso } from '../../common/texto';
+import { PolosService } from '../polos/polos.service';
 import { EstoqueItem, EstoqueItemView, Movimento, MovimentoTipo } from './estoque.model';
 
 export const DIAS_VALIDADE_CURTA = 180;
@@ -23,6 +24,8 @@ export interface EstoqueInput {
 export class EstoqueService {
   private readonly itens = new JsonCollection<EstoqueItem>('estoque');
   private readonly movimentos = new JsonCollection<Movimento>('movimentos');
+
+  constructor(private readonly polos: PolosService) {}
 
   listar(filtro: { q?: string; status?: string } = {}): EstoqueItemView[] {
     const q = filtro.q ? normalizarNome(filtro.q) : '';
@@ -104,11 +107,13 @@ export class EstoqueService {
     this.movimentos.removeWhere((m) => m.itemId === id);
   }
 
-  movimentar(id: string, tipo: MovimentoTipo, quantidade: number, motivo?: string, conferenciaId?: string): EstoqueItemView {
+  movimentar(id: string, tipo: MovimentoTipo, quantidade: number, motivo?: string, conferenciaId?: string, destinoId?: string): EstoqueItemView {
     if (!['entrada', 'saida', 'ajuste'].includes(tipo)) throw new BadRequestException('Tipo inválido (entrada, saida ou ajuste).');
     if (!Number.isInteger(quantidade) || quantidade < (tipo === 'ajuste' ? 0 : 1)) {
       throw new BadRequestException('Quantidade inválida.');
     }
+    // saída precisa de destino: valida antes de mexer no saldo
+    const destino = tipo === 'saida' ? this.polos.validarDestino(destinoId) : undefined;
     const item = this.obter(id);
     let saldo = item.quantidade;
     if (tipo === 'entrada') saldo += quantidade;
@@ -119,7 +124,8 @@ export class EstoqueService {
     if (tipo === 'ajuste') saldo = quantidade;
     const atualizado = { ...item, quantidade: saldo, atualizadoEm: new Date().toISOString() };
     this.itens.replace(atualizado);
-    this.registrar(atualizado, tipo, quantidade, saldo, motivo, conferenciaId);
+    this.registrar(atualizado, tipo, quantidade, saldo, tipo === 'saida' ? `Destino: ${destino!.nome}${motivo ? ' · ' + motivo : ''}` : motivo, conferenciaId, destino?.id);
+    if (destino) this.polos.receber(destino.id, item, quantidade, motivo);
     return this.view(atualizado);
   }
 
@@ -148,8 +154,8 @@ export class EstoqueService {
       .find((i) => normalizarLote(i.lote) === lt && ((ean && i.ean === ean) || normalizarNome(i.nome) === normalizarNome(nome)));
   }
 
-  private registrar(item: EstoqueItem, tipo: MovimentoTipo, quantidade: number, saldoApos: number, motivo?: string, conferenciaId?: string) {
-    this.movimentos.insert({ id: randomUUID(), itemId: item.id, tipo, quantidade, saldoApos, motivo, conferenciaId, em: new Date().toISOString() });
+  private registrar(item: EstoqueItem, tipo: MovimentoTipo, quantidade: number, saldoApos: number, motivo?: string, conferenciaId?: string, destinoId?: string) {
+    this.movimentos.insert({ id: randomUUID(), itemId: item.id, tipo, quantidade, saldoApos, motivo, conferenciaId, destinoId, em: new Date().toISOString() });
   }
 
   private validar(i: EstoqueInput, completo: boolean) {

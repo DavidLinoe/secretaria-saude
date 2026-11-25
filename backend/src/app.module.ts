@@ -4,6 +4,7 @@ import { NotasModule } from './modules/notas/notas.module';
 import { EstoqueModule } from './modules/estoque/estoque.module';
 import { ConferenciaModule } from './modules/conferencia/conferencia.module';
 import { DocumentosModule } from './modules/documentos/documentos.module';
+import { PolosModule } from './modules/polos/polos.module';
 import { ResetModule } from './modules/reset/reset.module';
 import { MocksModule } from './modules/mocks/mocks.module';
 
@@ -15,7 +16,7 @@ import { MocksModule } from './modules/mocks/mocks.module';
  * este app num repositório próprio.
  */
 @Module({
-  imports: [NotasModule, EstoqueModule, ConferenciaModule, MocksModule, DocumentosModule, ResetModule],
+  imports: [NotasModule, EstoqueModule, ConferenciaModule, MocksModule, DocumentosModule, ResetModule, PolosModule],
   controllers: [StatusController],
 })
 export class AppModule {}

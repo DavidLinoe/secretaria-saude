@@ -12,6 +12,7 @@ export const routes: Routes = [
       import('./pages/conferencia/conferencia-detalhe.component').then((m) => m.ConferenciaDetalheComponent),
   },
   { path: 'estoque', loadComponent: () => import('./pages/estoque/estoque.component').then((m) => m.EstoqueComponent) },
+  { path: 'polos', loadComponent: () => import('./pages/polos/polos.component').then((m) => m.PolosComponent) },
   {
     path: 'documentos',
     loadComponent: () => import('./pages/documentos/documentos.component').then((m) => m.DocumentosComponent),

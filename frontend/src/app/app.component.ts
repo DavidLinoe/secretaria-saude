@@ -24,6 +24,7 @@ export class AppComponent {
     { icon: 'pi-home', label: 'Início', route: '/home' },
     { icon: 'pi-check-square', label: 'Conferir', route: '/conferencia' },
     { icon: 'pi-box', label: 'Estoque', route: '/estoque' },
+    { icon: 'pi-building', label: 'Polos', route: '/polos' },
     { icon: 'pi-file-pdf', label: 'Documentos', route: '/documentos' },
     { icon: 'pi-camera', label: 'Escanear', route: '/escanear' },
   ];

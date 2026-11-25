@@ -6,6 +6,7 @@ import { FeedbackService } from '../../shared/feedback.service';
 import { SkeletonComponent } from '../../shared/skeleton.component';
 import { TagColor, TagComponent } from '../../shared/tag.component';
 import { dataBr } from '../../shared/erro';
+import { PolosFacade } from '../polos/polos.facade';
 import { EstoqueFacade } from './estoque.facade';
 import { EstoqueForm, EstoqueItem, FORM_VAZIO, FiltroEstoque, MovimentoTipo } from './estoque.model';
 
@@ -40,16 +41,23 @@ export class EstoqueComponent implements OnInit {
   movTipo: MovimentoTipo = 'saida';
   movQtd: number | null = null;
   movMotivo = '';
+  movDestino = '';
 
   private timer?: ReturnType<typeof setTimeout>;
 
   constructor(
     public facade: EstoqueFacade,
+    public polos: PolosFacade,
     private fb: FeedbackService,
   ) {}
 
   ngOnInit(): void {
     void this.facade.carregar(this.busca, this.filtro);
+    void this.polos.carregar();
+  }
+
+  get destinos() {
+    return this.polos.polos().filter((p) => p.ativo);
   }
 
   onBusca(): void {
@@ -78,6 +86,7 @@ export class EstoqueComponent implements OnInit {
     this.movTipo = 'saida';
     this.movQtd = null;
     this.movMotivo = '';
+    this.movDestino = '';
     this.painel.set('detalhe');
     void this.facade.carregarHistorico(item.id);
   }
@@ -123,8 +132,9 @@ export class EstoqueComponent implements OnInit {
   async movimentar(): Promise<void> {
     const item = this.selecionado();
     if (!item || this.movQtd === null || this.movQtd === undefined) return void this.erroPainel.set('Informe a quantidade.');
+    if (this.movTipo === 'saida' && !this.movDestino) return void this.erroPainel.set('Escolha o polo de destino da saída.');
     this.salvando.set(true);
-    const erro = await this.facade.movimentar(item.id, this.movTipo, Number(this.movQtd), this.movMotivo);
+    const erro = await this.facade.movimentar(item.id, this.movTipo, Number(this.movQtd), this.movMotivo, this.movTipo === 'saida' ? this.movDestino : undefined);
     this.salvando.set(false);
     if (erro) return void this.erroPainel.set(erro);
     this.erroPainel.set(null);
@@ -133,6 +143,8 @@ export class EstoqueComponent implements OnInit {
     this.selecionado.set(atualizado);
     this.movQtd = null;
     this.movMotivo = '';
+    this.movDestino = '';
+    void this.polos.carregar();
     void this.facade.carregarHistorico(item.id);
   }
 

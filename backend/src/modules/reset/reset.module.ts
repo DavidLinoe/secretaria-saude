@@ -5,6 +5,8 @@ import { DocumentosModule } from '../documentos/documentos.module';
 import { DocumentosService } from '../documentos/documentos.service';
 import { EstoqueModule } from '../estoque/estoque.module';
 import { EstoqueService } from '../estoque/estoque.service';
+import { PolosModule } from '../polos/polos.module';
+import { PolosService } from '../polos/polos.service';
 import { NotasModule } from '../notas/notas.module';
 import { NotasService } from '../notas/notas.service';
 
@@ -20,6 +22,7 @@ export class ResetController {
     private readonly conferencias: ConferenciaService,
     private readonly documentos: DocumentosService,
     private readonly notas: NotasService,
+    private readonly polos: PolosService,
   ) {}
 
   @Post()
@@ -28,9 +31,10 @@ export class ResetController {
     this.conferencias.resetar();
     this.documentos.resetar();
     this.notas.resetar();
+    this.polos.resetar();
     return { resetado: true, em: new Date().toISOString() };
   }
 }
 
-@Module({ imports: [EstoqueModule, ConferenciaModule, DocumentosModule, NotasModule], controllers: [ResetController] })
+@Module({ imports: [EstoqueModule, ConferenciaModule, DocumentosModule, NotasModule, PolosModule], controllers: [ResetController] })
 export class ResetModule {}

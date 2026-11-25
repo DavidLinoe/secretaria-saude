@@ -111,12 +111,20 @@
           <!-- ação: movimentar -->
           <div class="painel">
             <p class="painel-titulo">Movimentar saldo</p>
-            <p class="texto-pequeno mb-3">Entrada soma, saída subtrai e ajuste define o novo saldo (use após contagem).</p>
+            <p class="texto-pequeno mb-3">Entrada soma, saída subtrai (e lança a entrada no polo de destino) e ajuste define o novo saldo (use após contagem).</p>
             <div class="grid grid-cols-3 gap-2">
               @for (t of ['entrada', 'saida', 'ajuste']; track t) {
                 <button (click)="movTipo = $any(t)" class="chip text-center capitalize" [class.chip-ativo]="movTipo === t">{{ t === 'saida' ? 'saída' : t }}</button>
               }
             </div>
+            @if (movTipo === 'saida') {
+              <label class="campo-rotulo block mt-3">Polo de destino *
+                <select [(ngModel)]="movDestino" class="campo mt-1">
+                  <option value="">Selecione o destino…</option>
+                  @for (d of destinos; track d.id) { <option [value]="d.id">{{ d.nome }} ({{ d.tipo }})</option> }
+                </select>
+              </label>
+            }
             <div class="flex gap-2 mt-3">
               <input type="number" min="0" inputmode="numeric" [(ngModel)]="movQtd" [placeholder]="movTipo === 'ajuste' ? 'Novo saldo' : 'Quantidade'" class="campo !w-28" />
               <input type="text" [(ngModel)]="movMotivo" placeholder="Motivo (opcional)" class="campo flex-1 min-w-0" />

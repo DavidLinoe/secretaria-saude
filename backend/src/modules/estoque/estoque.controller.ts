@@ -42,8 +42,8 @@ export class EstoqueController {
   }
 
   @Post(':id/movimentos')
-  movimentar(@Param('id') id: string, @Body() body: { tipo: MovimentoTipo; quantidade: number; motivo?: string }) {
-    return this.service.movimentar(id, body.tipo, Number(body.quantidade), body.motivo);
+  movimentar(@Param('id') id: string, @Body() body: { tipo: MovimentoTipo; quantidade: number; motivo?: string; destinoId?: string }) {
+    return this.service.movimentar(id, body.tipo, Number(body.quantidade), body.motivo, undefined, body.destinoId);
   }
 
   @Delete(':id')

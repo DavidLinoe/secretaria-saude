@@ -30,8 +30,8 @@ export class EstoqueApiService {
     return this.http.delete<{ removido: boolean }>(`estoque/${id}`);
   }
 
-  movimentar(id: string, tipo: MovimentoTipo, quantidade: number, motivo: string): Promise<EstoqueItem> {
-    return this.http.post<EstoqueItem>(`estoque/${id}/movimentos`, { tipo, quantidade, motivo: motivo || undefined });
+  movimentar(id: string, tipo: MovimentoTipo, quantidade: number, motivo: string, destinoId?: string): Promise<EstoqueItem> {
+    return this.http.post<EstoqueItem>(`estoque/${id}/movimentos`, { tipo, quantidade, motivo: motivo || undefined, destinoId });
   }
 
   historico(id: string): Promise<Movimento[]> {

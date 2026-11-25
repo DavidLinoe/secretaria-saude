@@ -28,6 +28,8 @@ export interface Movimento {
   saldoApos: number;
   motivo?: string;
   conferenciaId?: string;
+  /** Polo que recebeu a saída. */
+  destinoId?: string;
   em: string;
 }
 

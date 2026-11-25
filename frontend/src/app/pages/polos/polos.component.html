@@ -1,0 +1,118 @@
+<div class="page">
+  <header class="page-header">
+    <h2>Polos de distribuição</h2>
+    <p>Locais que recebem medicamentos da secretaria</p>
+  </header>
+
+  @if (facade.erro(); as erro) {
+    <div class="px-4 mt-4"><div class="alerta-erro"><i class="pi pi-exclamation-triangle mr-1"></i>{{ erro }}</div></div>
+  }
+
+  <div class="secao">
+    <p class="secao-titulo">Polos cadastrados</p>
+    @if (facade.carregando() && !facade.polos().length) {
+      <div class="space-y-2"><app-skeleton height="64px"></app-skeleton><app-skeleton height="64px"></app-skeleton></div>
+    } @else {
+      <div class="lista">
+        @for (p of facade.polos(); track p.id) {
+          <button (click)="abrir(p)" class="lista-item lista-item-link" [class.opacity-60]="!p.ativo">
+            <span class="lista-icone"><i class="pi pi-building"></i></span>
+            <div class="min-w-0 flex-1">
+              <p class="text-sm font-semibold text-slate-900">{{ p.nome }}</p>
+              <p class="text-xs text-slate-500 mt-0.5 truncate">{{ p.tipo }}@if (p.endereco) { · {{ p.endereco }} }@if (!p.ativo) { · inativo }</p>
+            </div>
+            <div class="text-right shrink-0">
+              <p class="text-2xl font-bold leading-none text-slate-900">{{ p.totalUnidades }}</p>
+              <p class="text-[10px] uppercase text-slate-500 mt-1">recebidas</p>
+            </div>
+            <i class="pi pi-angle-right text-slate-300"></i>
+          </button>
+        }
+      </div>
+    }
+  </div>
+</div>
+
+<button (click)="novo()" class="fixed bottom-20 lg:bottom-8 right-4 lg:right-8 z-40 h-14 pl-4 pr-5 rounded-full bg-slate-900 text-white flex items-center gap-2 shadow-lg" aria-label="Novo polo">
+  <i class="pi pi-plus"></i><span class="text-sm font-medium">Novo polo</span>
+</button>
+
+@if (painel(); as p) {
+  <div class="fixed inset-0 z-[60] bg-black/50 flex items-end lg:items-center lg:justify-center" (click)="fechar()">
+    <div class="bg-slate-100 w-full lg:max-w-xl max-h-[90vh] overflow-y-auto rounded-t-2xl lg:rounded-2xl pb-8" (click)="$event.stopPropagation()">
+
+      @if (p === 'detalhe' && selecionado(); as polo) {
+        <div class="bg-slate-900 text-white px-5 py-4 rounded-t-2xl flex items-start justify-between gap-3">
+          <div>
+            <p class="text-base font-semibold">{{ polo.nome }}</p>
+            <p class="text-xs text-slate-300 mt-0.5">{{ polo.tipo }}@if (polo.endereco) { · {{ polo.endereco }} }</p>
+          </div>
+          <button (click)="fechar()" aria-label="Fechar" class="text-slate-300 mt-1"><i class="pi pi-times"></i></button>
+        </div>
+        <div class="px-4 mt-4 space-y-4">
+          @if (erroPainel(); as e) { <div class="alerta-erro">{{ e }}</div> }
+
+          <div>
+            <p class="secao-titulo">Estoque no polo</p>
+            @if (!facade.estoque().length) {
+              <div class="lista-vazia"><p class="text-sm text-slate-700">Nenhuma remessa recebida ainda.</p><p class="texto-pequeno mt-1">Dê uma saída no Estoque escolhendo este polo como destino.</p></div>
+            } @else {
+              <div class="lista">
+                @for (e of facade.estoque(); track e.id) {
+                  <div class="lista-item">
+                    <div class="flex-1 min-w-0 text-xs">
+                      <p class="text-slate-900 font-medium">{{ e.nome }}</p>
+                      <p class="text-slate-500">Lote {{ e.lote }} · val. {{ dataBr(e.validade) }}</p>
+                    </div>
+                    <p class="text-sm font-bold text-slate-900">{{ e.quantidade }} <span class="text-[10px] font-normal uppercase text-slate-500">{{ e.unidade }}</span></p>
+                  </div>
+                }
+              </div>
+            }
+          </div>
+
+          <div>
+            <p class="secao-titulo">Remessas recebidas</p>
+            <div class="lista">
+              @for (d of facade.distribuicoes(); track d.id) {
+                <div class="lista-item">
+                  <span class="lista-icone text-sm font-bold !bg-emerald-100 !text-emerald-700">+</span>
+                  <div class="flex-1 min-w-0 text-xs">
+                    <p class="text-slate-900 font-medium">{{ d.nome }} · {{ d.quantidade }}</p>
+                    <p class="text-slate-500 truncate">Lote {{ d.lote }} · {{ d.em | date: 'dd/MM HH:mm' }}@if (d.motivo) { · {{ d.motivo }} }</p>
+                  </div>
+                </div>
+              }
+            </div>
+          </div>
+
+          <div class="grid grid-cols-3 gap-2">
+            <button (click)="editar(polo)" class="btn-secundario"><i class="pi pi-pencil text-xs"></i>Editar</button>
+            <button (click)="alternarAtivo()" class="btn-secundario">{{ polo.ativo ? 'Desativar' : 'Reativar' }}</button>
+            <button (click)="excluir()" class="btn-perigo"><i class="pi pi-trash text-xs"></i>Excluir</button>
+          </div>
+        </div>
+      }
+
+      @if (p === 'form') {
+        <div class="bg-slate-900 text-white px-5 py-4 rounded-t-2xl flex items-center justify-between">
+          <p class="text-base font-semibold">{{ editandoId ? 'Editar polo' : 'Novo polo' }}</p>
+          <button (click)="fechar()" aria-label="Fechar" class="text-slate-300"><i class="pi pi-times"></i></button>
+        </div>
+        <div class="px-4 mt-4 space-y-4">
+          @if (erroPainel(); as e) { <div class="alerta-erro">{{ e }}</div> }
+          <form (ngSubmit)="salvar()" class="painel space-y-3">
+            <label class="campo-rotulo">Nome *<input name="nome" [(ngModel)]="form.nome" required class="campo mt-1" /></label>
+            <label class="campo-rotulo">Tipo
+              <select name="tipo" [(ngModel)]="form.tipo" class="campo mt-1">
+                @for (t of tipos; track t) { <option [value]="t">{{ t }}</option> }
+              </select>
+            </label>
+            <label class="campo-rotulo">Endereço<input name="endereco" [(ngModel)]="form.endereco" class="campo mt-1" /></label>
+            <button type="submit" [disabled]="salvando()" class="btn-primario w-full">{{ salvando() ? 'Salvando…' : 'Salvar polo' }}</button>
+          </form>
+        </div>
+      }
+    </div>
+  </div>
+}

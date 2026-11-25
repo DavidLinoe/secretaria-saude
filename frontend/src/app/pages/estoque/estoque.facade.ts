@@ -54,9 +54,9 @@ export class EstoqueFacade {
     }
   }
 
-  async movimentar(id: string, tipo: MovimentoTipo, quantidade: number, motivo: string): Promise<string | null> {
+  async movimentar(id: string, tipo: MovimentoTipo, quantidade: number, motivo: string, destinoId?: string): Promise<string | null> {
     try {
-      await this.api.movimentar(id, tipo, quantidade, motivo);
+      await this.api.movimentar(id, tipo, quantidade, motivo, destinoId);
       await this.carregar();
       return null;
     } catch (err) {
