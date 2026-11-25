@@ -105,7 +105,7 @@
 
 @if (conferencia(); as c) {
   <!-- AÇÕES -->
-  <div class="fixed bottom-14 left-0 right-0 bg-white border-t-2 border-slate-900 p-4 z-40 shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
+  <div class="fixed bottom-14 lg:bottom-0 left-0 lg:left-60 right-0 bg-white border-t-2 border-slate-900 p-4 z-40 shadow-[0_-4px_12px_rgba(0,0,0,0.08)]">
     @if (c.status === 'pendente') {
       <p class="texto-pequeno mb-2"><strong class="text-slate-900">{{ totalEntradas(c) }} item(ns)</strong> entrarão no estoque. Divergentes só entram se aceitos; vencidos nunca entram.</p>
       <div class="flex gap-2">

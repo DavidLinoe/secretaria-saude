@@ -67,11 +67,30 @@ export PATH="$JAVA_HOME/bin:$ANDROID_HOME/platform-tools:$ANDROID_HOME/cmdline-t
 success "Java e Android SDK OK (JAVA_HOME=$JAVA_HOME)"
 
 # ======================================================
-# PASSO 2: BUILD ANGULAR (produção)
+# PASSO 2: URL DA API + BUILD ANGULAR
 # ======================================================
+# O APK roda no celular, entao "localhost" nao serve: precisa do endereco do
+# backend na rede. Defina com API_URL=http://IP:3000/ ; sem isso, usa o IP da
+# rede local desta maquina (celular e PC na mesma rede Wi-Fi).
+# Emulador Android: API_URL=http://10.0.2.2:3000/
+if [ -z "$API_URL" ]; then
+    LAN_IP=$(hostname -I 2>/dev/null | tr ' ' '\n' | grep -E '^(192\.168|10\.|172\.(1[6-9]|2[0-9]|3[01])\.)' | head -1)
+    [ -n "$LAN_IP" ] || error "Nao detectei o IP da rede. Rode: API_URL=http://SEU_IP:3000/ npm run build:apk"
+    API_URL="http://$LAN_IP:3000/"
+fi
+case "$API_URL" in */) ;; *) API_URL="$API_URL/" ;; esac
+info "API do app: $API_URL (backend precisa estar rodando la: cd backend && npm run dev)"
+cat > src/environments/environment.apk.ts <<ENVEOF
+// GERADO por scripts/build-apk.sh - nao editar nem commitar.
+export const environment = {
+  production: true,
+  apiUrl: '$API_URL',
+};
+ENVEOF
+
 info "📌 Build Angular (produção)..."
 rm -rf dist/frontend
-npx ng build --configuration=production
+npx ng build --configuration=apk
 
 SOURCE_DIR="dist/frontend/browser"
 [ -f "$SOURCE_DIR/index.html" ] || error "Build não gerou $SOURCE_DIR/index.html — confira o output do 'ng build' acima"

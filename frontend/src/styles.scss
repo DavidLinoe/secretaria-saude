@@ -3,6 +3,11 @@
 @tailwind components;
 @tailwind utilities;
 
+// Telas grandes: escala o rem (todo o Tailwind acompanha) — antes o app ficava minúsculo no PC.
+html { font-size: 16px; }
+@media (min-width: 1024px) { html { font-size: 17px; } }
+@media (min-width: 1536px) { html { font-size: 18px; } }
+
 body {
   margin: 0;
   height: 100%;
@@ -42,8 +47,8 @@ textarea {
  *   .btn-*        → ações; .alerta-* → erro/aviso
  */
 @layer components {
-  .page { @apply min-h-screen pb-28; }
-  .page-header { @apply bg-slate-900 text-white px-5 pt-12 pb-5; }
+  .page { @apply min-h-screen pb-28 lg:pb-12; }
+  .page-header { @apply bg-slate-900 text-white px-5 pt-12 pb-5 lg:pt-6 lg:mt-6 lg:rounded-lg; }
   .page-header h2 { @apply text-xl font-semibold; }
   .page-header p { @apply text-sm text-slate-300 mt-0.5; }
 

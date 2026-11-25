@@ -1,7 +1,31 @@
-<router-outlet></router-outlet>
+<!-- Desktop (lg+): menu lateral fixo. Mobile: barra inferior. -->
+<aside class="hidden lg:flex fixed inset-y-0 left-0 w-60 bg-slate-900 text-slate-300 flex-col z-50">
+  <div class="px-5 py-6 border-b border-slate-800">
+    <p class="text-white font-semibold leading-tight">Secretaria da Saúde</p>
+    <p class="text-xs text-slate-400 mt-1">Conferência e estoque</p>
+  </div>
+  <nav class="flex-1 py-3">
+    @for (item of navItems; track item.route) {
+      <a
+        [routerLink]="item.route"
+        routerLinkActive="!text-white bg-slate-800 !border-l-white"
+        class="flex items-center gap-3 px-5 py-3 text-sm border-l-4 border-transparent hover:bg-slate-800/60"
+      >
+        <i class="pi {{ item.icon }}"></i>
+        {{ item.label }}
+      </a>
+    }
+  </nav>
+</aside>
+
+<main class="lg:pl-60">
+  <div class="max-w-5xl mx-auto lg:px-6">
+    <router-outlet></router-outlet>
+  </div>
+</main>
 <app-feedback></app-feedback>
 
-<nav class="fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex items-stretch z-50">
+<nav class="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 flex items-stretch z-50">
   @for (item of navItems; track item.route) {
     <a
       [routerLink]="item.route"

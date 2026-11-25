@@ -49,3 +49,6 @@ Thumbs.db
 
 # APKs gerados por scripts/build-apk.sh
 /release
+
+# gerado por scripts/build-apk.sh
+/src/environments/environment.apk.ts

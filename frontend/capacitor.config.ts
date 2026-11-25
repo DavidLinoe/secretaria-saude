@@ -5,7 +5,10 @@ const config: CapacitorConfig = {
   appName: 'Secretaria da Saúde',
   webDir: 'dist/frontend/browser',
   server: {
-    androidScheme: 'https',
+    // http (não https): o backend do MVP roda em http na rede local; com a página em https
+    // o WebView bloquearia as chamadas (mixed content).
+    androidScheme: 'http',
+    cleartext: true,
   },
 };
 
