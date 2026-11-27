@@ -38,7 +38,7 @@ export class PythonBridgeService {
   private readonly baseUrl = process.env.PYTHON_API_URL ?? 'http://localhost:8000';
   private readonly processImagePath = process.env.PYTHON_PROCESS_IMAGE_PATH ?? '/process-image';
   private readonly processImagesPath = process.env.PYTHON_PROCESS_IMAGES_PATH ?? '/process-images';
-  private readonly timeoutMs = Number(process.env.PYTHON_API_TIMEOUT_MS ?? 30000);
+  private readonly timeoutMs = Number(process.env.PYTHON_API_TIMEOUT_MS ?? 120000);
 
   private client() {
     return axios.create({ baseURL: this.baseUrl, timeout: this.timeoutMs });

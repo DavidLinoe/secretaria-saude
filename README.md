@@ -45,13 +45,39 @@ secretaria-saude/
   backend/    NestJS (porta 3000) — conferência, estoque, documentos, reset, ponte opcional p/ API Python
   frontend/   Angular 20 + Ionic/Capacitor, mobile-first — Início, Conferir, Estoque, Documentos, Escanear
   assets/     PDFs/PNGs de exemplo + scripts/ (gerador) + manifest.json
+  vision/     Python (FastAPI + YOLO, porta 8000) — contador de caixas usado pela aba Escanear
 ```
+
+### Contador de caixas (`vision/`)
+A aba **Escanear** envia a foto ao backend, que a repassa ao serviço `vision/` (`PYTHON_API_URL`).
+Ele detecta as caixas com **YOLOE** (vocabulário aberto: procura "box" sem precisar treinar) e
+devolve o total e a foto com as caixas numeradas. Em lote, o total é a soma das fotos.
+
+Também lê o **nome do remédio** no rótulo de cada caixa (OCR com RapidOCR, `vision/nomes.py`): devolve a
+contagem por remédio e, se o campo "Remédio" ficar em branco e um remédio dominar a foto, preenche o nome
+sozinho (marcado "lido da caixa"). O usuário informa também quantas **camadas** há empilhadas; o total
+é caixas na foto × camadas. Desligue o OCR com `VISION_OCR=0` (fica ~3–5× mais rápido).
+
+Sem treino a contagem é **aproximada**: em pilhas apertadas ele pode juntar duas caixas ou dividir
+uma caixa comprida em duas. Para precisão real, anote ~100–300 fotos do almoxarifado com a classe
+`caixa` e treine com `vision/treinar.py` (instruções no topo do arquivo); depois aponte
+`VISION_MODEL` para o `best.pt`. Ajustes por env: `VISION_CONF`, `VISION_IMGSZ`, `VISION_CLASSES`
+(ver docstring de `vision/app.py`).
+
+**Avaliação:** `vision/testes/` tem fotos de teste (Wikimedia Commons, ver `CREDITOS.md`) com a
+contagem esperada em `gabarito.json`. Rode `.venv\Scripts\python avaliar.py` dentro de `vision/`
+depois de qualquer ajuste — mostra acertos por foto e salva as anotadas em `testes/saida/`.
+Configuração atual: 9/11 acertos (erra pilhas de papelão pardo na penumbra e confunde móveis com caixa).
 
 ## Como rodar
 
 ```bash
 cd backend  && cp .env.example .env && npm install && npm run dev     # http://localhost:3000
 cd frontend && npm install && npx ng serve                            # http://localhost:4200 (proxy p/ o backend)
+
+# contador de caixas (Python 3.10+; na 1ª subida baixa os pesos do YOLOE)
+cd vision && py -3.11 -m venv .venv && .venv\Scripts\pip install -r requirements.txt
+.venv\Scripts\python -m uvicorn app:app --port 8000                  # http://localhost:8000
 ```
 
 Variáveis úteis do backend: `PORT`, `DATA_DIR` (onde ficam JSON e uploads; padrão `backend/data`),

@@ -1,0 +1,8 @@
+ultralytics>=8.3
+fastapi>=0.110
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9
+# Encoders de texto que o YOLOE/YOLO-World baixam sozinhos na 1ª execução
+# (deixados aqui pra instalação não depender da auto-instalação do ultralytics).
+clip @ git+https://github.com/ultralytics/CLIP.git
+rapidocr_onnxruntime>=1.3

@@ -1,5 +1,6 @@
 import { ChangeDetectionStrategy, Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
 import { AjudaComponent } from '../../../shared/ajuda.component';
 import { PhotoPickerComponent } from '../../../shared/photo-picker.component';
@@ -8,7 +9,7 @@ import { TagComponent } from '../../../shared/tag.component';
 import { validateImageFile } from '../../../shared/validate-image-file';
 import { EscanearFacade } from '../facades/escanear.facade';
 import { EscanearAdapter } from '../adapters/escanear.adapter';
-import { NotaRegistro } from '../models/escanear.model';
+import { NotaMetadados, NotaRegistro } from '../models/escanear.model';
 
 interface Captura {
   file: File;
@@ -19,7 +20,7 @@ interface Captura {
   selector: 'app-escanear',
   standalone: true,
   templateUrl: './escanear.component.html',
-  imports: [CommonModule, AjudaComponent, PhotoPickerComponent, SkeletonComponent, TagComponent],
+  imports: [CommonModule, FormsModule, AjudaComponent, PhotoPickerComponent, SkeletonComponent, TagComponent],
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class EscanearComponent implements OnInit {
@@ -30,6 +31,17 @@ export class EscanearComponent implements OnInit {
   /** Fotos batidas na câmera nesta sessão, aguardando envio (ver `abrirCamera`). */
   capturas: Captura[] = [];
   capturando = false;
+
+  /** Valem para o próximo envio (foto única, lote ou câmera). */
+  medicamento = '';
+  camadas = 1;
+
+  /** Nota com a imagem anotada (caixas marcadas) aberta no histórico. */
+  expandida: string | null = null;
+
+  alternar(nota: NotaRegistro): void {
+    this.expandida = this.expandida === nota.id ? null : nota.id;
+  }
 
   constructor(public facade: EscanearFacade) {}
 
@@ -74,11 +86,11 @@ export class EscanearComponent implements OnInit {
     if (!this.capturas.length) return;
     const files = this.capturas.map((c) => c.file);
     this.capturas = [];
-    await this.facade.enviarLote(files);
+    await this.facade.enviarLote(files, this.metadados());
   }
 
   onFotoUnica(file: File): void {
-    void this.facade.enviarImagemUnica(file);
+    void this.facade.enviarImagemUnica(file, this.metadados());
   }
 
   onLoteSelecionado(event: Event): void {
@@ -90,7 +102,32 @@ export class EscanearComponent implements OnInit {
     this.loteInvalido = files.map((f) => validateImageFile(f)).find((e) => !!e) ?? null;
     if (this.loteInvalido) return;
 
-    void this.facade.enviarLote(files);
+    void this.facade.enviarLote(files, this.metadados());
+  }
+
+  /** Camadas sempre inteiro ≥ 1 (o campo numérico aceita vazio/0/decimal). */
+  private camadasValidas(valor: unknown): number {
+    const n = Math.floor(Number(valor));
+    return Number.isFinite(n) && n >= 1 ? Math.min(n, 999) : 1;
+  }
+
+  private metadados(): NotaMetadados {
+    return { medicamento: this.medicamento.trim() || undefined, camadas: this.camadasValidas(this.camadas) };
+  }
+
+  ajustarCamadas(delta: number): void {
+    this.camadas = this.camadasValidas(this.camadasValidas(this.camadas) + delta);
+  }
+
+  /** Edição no histórico: só salva se mudou de fato. */
+  salvarCamadas(nota: NotaRegistro, valor: unknown): void {
+    const camadas = this.camadasValidas(valor);
+    if (camadas !== this.adapter.camadas(nota)) void this.facade.atualizar(nota.id, { camadas });
+  }
+
+  salvarMedicamento(nota: NotaRegistro, valor: string): void {
+    const medicamento = valor.trim();
+    if (medicamento !== (nota.medicamento ?? '')) void this.facade.atualizar(nota.id, { medicamento });
   }
 
   remover(nota: NotaRegistro): void {

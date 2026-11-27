@@ -36,6 +36,10 @@ export class HttpService {
     return firstValueFrom(this.httpClient.put<T>(this.baseUrl + url, body).pipe(timeout(timeoutMs)));
   }
 
+  patch<T>(url: string, body: unknown, timeoutMs: number = DEFAULT_TIMEOUT_MS): Promise<T> {
+    return firstValueFrom(this.httpClient.patch<T>(this.baseUrl + url, body).pipe(timeout(timeoutMs)));
+  }
+
   delete<T>(url: string, timeoutMs: number = DEFAULT_TIMEOUT_MS): Promise<T> {
     return firstValueFrom(this.httpClient.delete<T>(this.baseUrl + url).pipe(timeout(timeoutMs)));
   }

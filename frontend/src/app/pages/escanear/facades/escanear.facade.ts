@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject } from 'rxjs';
 import { EscanearApiService } from '../apis/escanear.api';
-import { NotaRegistro } from '../models/escanear.model';
+import { NotaMetadados, NotaRegistro } from '../models/escanear.model';
 
 @Injectable({ providedIn: 'root' })
 export class EscanearFacade {
@@ -29,12 +29,26 @@ export class EscanearFacade {
     }
   }
 
-  async enviarImagemUnica(file: File): Promise<void> {
-    await this.enviar(() => this.api.processarImagem(file));
+  async enviarImagemUnica(file: File, meta: NotaMetadados): Promise<void> {
+    await this.enviar(() => this.api.processarImagem(file, meta));
   }
 
-  async enviarLote(files: File[]): Promise<void> {
-    await this.enviar(() => this.api.processarImagens(files));
+  async enviarLote(files: File[], meta: NotaMetadados): Promise<void> {
+    await this.enviar(() => this.api.processarImagens(files, meta));
+  }
+
+  /** Corrige nome/camadas de um envio já feito (otimista; desfaz se falhar). */
+  async atualizar(id: string, meta: Partial<NotaMetadados>): Promise<void> {
+    const anterior = this._notas$.value;
+    this._notas$.next(anterior.map((n) => (n.id === id ? { ...n, ...meta } : n)));
+    try {
+      const nota = await this.api.atualizar(id, meta);
+      this._notas$.next(this._notas$.value.map((n) => (n.id === id ? nota : n)));
+    } catch (err) {
+      console.error('[EscanearFacade] falha ao atualizar nota:', err);
+      this._notas$.next(anterior);
+      this._erro$.next('Não foi possível salvar a alteração. Tente novamente.');
+    }
   }
 
   private async enviar(chamada: () => Promise<NotaRegistro>): Promise<void> {

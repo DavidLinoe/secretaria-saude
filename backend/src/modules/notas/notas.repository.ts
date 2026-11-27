@@ -30,6 +30,18 @@ export class NotasRepository {
     return this.notas.get(id);
   }
 
+  update(id: string, data: Partial<Pick<NotaRegistro, 'medicamento' | 'camadas'>>): NotaRegistro | undefined {
+    const nota = this.notas.get(id);
+    if (!nota) return undefined;
+    const atualizada: NotaRegistro = { ...nota, ...data };
+    if ('medicamento' in data) {
+      delete atualizada.medicamento_automatico; // editado à mão
+      if (!data.medicamento) delete atualizada.medicamento;
+    }
+    this.notas.set(id, atualizada);
+    return atualizada;
+  }
+
   clear(): void {
     this.notas.clear();
   }

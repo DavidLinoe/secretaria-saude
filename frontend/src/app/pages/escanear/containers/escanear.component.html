@@ -2,12 +2,12 @@
 
   <!-- Header -->
   <header class="page-header">
-    <h2>Escanear nota</h2>
-    <p>Fluxo opcional: foto enviada ao serviço externo de OCR</p>
+    <h2>Escanear</h2>
+    <p>Fotografe a carga e o sistema conta quantas caixas aparecem</p>
   </header>
   <div class="px-4 mt-4">
     <app-ajuda titulo="Quando usar esta tela" chave="escanear">
-      <p>Esta tela envia fotos ao serviço Python de OCR e só registra o resultado — <strong>não compara nem lança no estoque</strong>. Para o fluxo completo, use a aba Conferir.</p>
+      <p>As fotos vão para o serviço de visão (YOLO), que identifica e <strong>conta as caixas</strong> em cada imagem e devolve a foto com as caixas marcadas. Em lote, o total é a soma das fotos — evite fotografar a mesma caixa duas vezes. A contagem <strong>não lança no estoque</strong>; para isso, use a aba Conferir.</p>
     </app-ajuda>
   </div>
 
@@ -18,10 +18,40 @@
     </div>
   }
 
+  <!-- Dados da contagem: valem para o próximo envio -->
+  <div class="painel mx-4 mt-4">
+    <p class="text-sm font-medium text-slate-900">Dados da contagem</p>
+    <p class="text-xs text-slate-500 mb-3">Preencha antes de enviar a foto</p>
+
+    <div class="grid grid-cols-1 sm:grid-cols-[1fr_auto] gap-3">
+      <div>
+        <label for="medicamento" class="campo-rotulo mb-1">Remédio</label>
+        <input id="medicamento" type="text" maxlength="120" [(ngModel)]="medicamento" placeholder="Em branco: lê o nome da caixa na foto" class="campo" />
+      </div>
+      <div>
+        <label for="camadas" class="campo-rotulo mb-1">Camadas</label>
+        <div class="flex items-stretch">
+          <button type="button" (click)="ajustarCamadas(-1)" class="px-3 border border-slate-300 rounded-l-md text-slate-600 hover:bg-slate-50" aria-label="Menos uma camada">
+            <i class="pi pi-minus text-xs"></i>
+          </button>
+          <input id="camadas" type="number" min="1" max="999" step="1" inputmode="numeric" [(ngModel)]="camadas"
+                 class="campo !rounded-none !w-20 text-center border-x-0" />
+          <button type="button" (click)="ajustarCamadas(1)" class="px-3 border border-slate-300 rounded-r-md text-slate-600 hover:bg-slate-50" aria-label="Mais uma camada">
+            <i class="pi pi-plus text-xs"></i>
+          </button>
+        </div>
+      </div>
+    </div>
+    <p class="text-xs text-slate-500 mt-2">
+      A foto só enxerga as caixas de cima. Se houver mais caixas iguais empilhadas por baixo, informe quantas camadas há
+      no total (contando a de cima): o sistema multiplica.
+    </p>
+  </div>
+
   <!-- Foto única -->
   <div class="painel mx-4 mt-4">
     <p class="text-sm font-medium text-slate-900">Foto única</p>
-    <p class="text-xs text-slate-500 mb-3">Envia e processa uma nota imediatamente</p>
+    <p class="text-xs text-slate-500 mb-3">Envia uma foto e conta as caixas imediatamente</p>
 
     <div class="flex items-center gap-3">
       <app-photo-picker [disabled]="(facade.enviando$ | async) ?? false" (fileSelected)="onFotoUnica($event)"></app-photo-picker>
@@ -36,7 +66,7 @@
   <!-- Lote de fotos -->
   <div class="painel mx-4 mt-4">
     <p class="text-sm font-medium text-slate-900">Lote de fotos</p>
-    <p class="text-xs text-slate-500 mb-3">Várias páginas/itens da mesma nota, enviados de uma vez</p>
+    <p class="text-xs text-slate-500 mb-3">Várias fotos da mesma carga, enviadas de uma vez (o total é somado)</p>
 
     <!-- `<input>` nativo de propósito: sem primitivo próprio pra seleção múltipla de arquivo. -->
     <label
@@ -61,7 +91,7 @@
 
   <!-- Histórico (CRUD de leitura) -->
   <div class="secao">
-    <p class="secao-titulo">Notas enviadas</p>
+    <p class="secao-titulo">Fotos enviadas</p>
 
     @if (facade.loadingLista$ | async) {
       <div class="space-y-2 py-2">
@@ -72,18 +102,81 @@
       @if ((facade.notas$ | async)?.length) {
         <div class="lista">
           @for (nota of facade.notas$ | async; track nota.id) {
-            <div class="lista-item items-start justify-between">
-              <div class="min-w-0">
-                <p class="text-sm font-medium text-slate-900">{{ adapter.tipoLabel(nota) }}</p>
-                <p class="text-xs text-slate-500 mt-0.5 truncate">{{ nota.arquivos.join(', ') }}</p>
-                <p class="text-xs text-slate-400 mt-1">{{ nota.criado_em | date: 'dd/MM/yyyy HH:mm' }}</p>
+            @let contagem = adapter.contagem(nota);
+            <div class="lista-item flex-col !items-stretch">
+              <div class="flex items-start justify-between gap-3">
+                <div class="min-w-0">
+                  @let porRemedio = adapter.porMedicamento(nota);
+                  <p class="text-sm font-medium text-slate-900 truncate">
+                    {{ nota.medicamento || (porRemedio.length > 1 ? 'Vários remédios' : 'Remédio não informado') }}
+                    @if (nota.medicamento_automatico) {
+                      <span class="ml-1 text-[11px] font-normal text-slate-500" title="Nome lido do rótulo na foto — confira">(lido da caixa)</span>
+                    }
+                  </p>
+                  <p class="text-xs text-slate-500 mt-0.5 truncate">{{ adapter.tipoLabel(nota) }} · {{ nota.arquivos.join(', ') }}</p>
+                  <p class="text-xs text-slate-400 mt-1">{{ nota.criado_em | date: 'dd/MM/yyyy HH:mm' }}</p>
+                  @if (contagem) {
+                    <p class="text-xs text-slate-600 mt-1">
+                      {{ adapter.caixasLabel(contagem.total_caixas) }} na foto × {{ adapter.camadas(nota) }}
+                      {{ adapter.camadas(nota) === 1 ? 'camada' : 'camadas' }}
+                    </p>
+                    @if (porRemedio.length > 1) {
+                      <!-- Contagem por remédio lido nos rótulos -->
+                      <ul class="mt-2 space-y-0.5">
+                        @for (item of porRemedio; track $index) {
+                          <li class="text-xs text-slate-700 flex gap-2">
+                            <span class="truncate" [class.text-slate-400]="!item.nome">{{ item.nome ?? 'Sem nome legível' }}</span>
+                            <span class="flex-shrink-0 text-slate-500">
+                              {{ item.caixas }}@if (adapter.camadas(nota) > 1) { × {{ adapter.camadas(nota) }} }
+                              = <strong class="text-slate-900">{{ item.caixas * adapter.camadas(nota) }}</strong>
+                            </span>
+                          </li>
+                        }
+                      </ul>
+                    }
+                    <button (click)="alternar(nota)" class="text-xs font-medium text-slate-700 underline mt-2">
+                      {{ expandida === nota.id ? 'Fechar' : 'Ver foto e editar' }}
+                    </button>
+                  }
+                </div>
+                <div class="flex flex-col items-end gap-2 flex-shrink-0">
+                  @if (contagem) {
+                    <p class="text-2xl font-semibold text-slate-900 leading-none">{{ adapter.totalEstimado(nota) }}</p>
+                    <p class="text-[11px] text-slate-500 -mt-1">{{ adapter.totalEstimado(nota) === 1 ? 'caixa' : 'caixas' }} no total</p>
+                  } @else {
+                    <app-tag [label]="adapter.statusLabel(nota)" [color]="adapter.statusColor(nota)"></app-tag>
+                  }
+                  <button (click)="remover(nota)" class="text-slate-400 hover:text-slate-600" aria-label="Remover">
+                    <i class="pi pi-trash text-sm"></i>
+                  </button>
+                </div>
               </div>
-              <div class="flex flex-col items-end gap-2 flex-shrink-0">
-                <app-tag [label]="adapter.statusLabel(nota)" [color]="adapter.statusColor(nota)"></app-tag>
-                <button (click)="remover(nota)" class="text-slate-400 hover:text-slate-600" aria-label="Remover">
-                  <i class="pi pi-trash text-sm"></i>
-                </button>
-              </div>
+
+              @if (contagem && expandida === nota.id) {
+                <div class="space-y-3">
+                  <!-- Corrigir depois de ver a contagem (salva ao sair do campo) -->
+                  <div class="grid grid-cols-[1fr_auto] gap-3">
+                    <div>
+                      <label [for]="'med-' + nota.id" class="campo-rotulo mb-1">Remédio</label>
+                      <input [id]="'med-' + nota.id" type="text" maxlength="120" class="campo" placeholder="Ex.: Ibuprofeno 400 mg"
+                             [value]="nota.medicamento ?? ''" #med (blur)="salvarMedicamento(nota, med.value)" (keyup.enter)="med.blur()" />
+                    </div>
+                    <div>
+                      <label [for]="'cam-' + nota.id" class="campo-rotulo mb-1">Camadas</label>
+                      <input [id]="'cam-' + nota.id" type="number" min="1" max="999" step="1" inputmode="numeric" class="campo !w-20 text-center"
+                             [value]="adapter.camadas(nota)" #cam (blur)="salvarCamadas(nota, cam.value)" (keyup.enter)="cam.blur()" />
+                    </div>
+                  </div>
+                  @for (img of contagem.imagens; track $index) {
+                    <figure>
+                      <img [src]="img.imagem_anotada" [alt]="'Caixas detectadas em ' + img.arquivo" class="w-full border border-slate-200" />
+                      <figcaption class="text-xs text-slate-500 mt-1">
+                        {{ img.arquivo }} — {{ adapter.caixasLabel(img.caixas) }}
+                      </figcaption>
+                    </figure>
+                  }
+                </div>
+              }
             </div>
           }
         </div>

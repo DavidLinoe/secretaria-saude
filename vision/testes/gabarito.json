@@ -1,0 +1,58 @@
+{
+  "_comentario": "Caixas visíveis contadas à mão. 'tolerancia' = quanto a contagem pode errar e ainda passar (fotos com bordas cortadas/caixas escondidas são ambíguas).",
+  "thaipost.jpg": {
+    "caixas": 6,
+    "tolerancia": 0,
+    "obs": "pilha de 5 + 1 à direita; papelões dobrados ao fundo não contam"
+  },
+  "ontario.jpg": {
+    "caixas": 19,
+    "tolerancia": 1,
+    "obs": "2 colunas de bandejas (9 + 10)"
+  },
+  "pharma.jpg": {
+    "caixas": 24,
+    "tolerancia": 3,
+    "obs": "remédios no balcão; bordas cortadas e prateleira ao fundo tornam ambíguo"
+  },
+  "warehouse.jpg": {
+    "caixas": 14,
+    "tolerancia": 3,
+    "obs": "pilha de 3 fileiras parcialmente escondida + 2 à esquerda"
+  },
+  "beijing.jpg": {
+    "caixas": 1,
+    "tolerancia": 0,
+    "obs": ""
+  },
+  "pallet.jpg": {
+    "caixas": 1,
+    "tolerancia": 0,
+    "obs": "render de 1 caixa no palete"
+  },
+  "wellcome.jpg": {
+    "caixas": 2,
+    "tolerancia": 0,
+    "obs": "2 estojos de remédio antigos"
+  },
+  "ibuprofeno-grade.png": {
+    "caixas": 20,
+    "tolerancia": 0,
+    "obs": "grade 4x5 de caixas idênticas vistas de cima (foto enviada pelo usuário)"
+  },
+  "ibuprofeno-fileira.png": {
+    "caixas": 5,
+    "tolerancia": 0,
+    "obs": "fileira de 5 caixas idênticas encostadas (foto enviada pelo usuário)"
+  },
+  "remedios-caixa.png": {
+    "caixas": 8,
+    "tolerancia": 0,
+    "obs": "caixa de papelão com remédios vista de cima; conta só as 8 com a face de cima visível (Paracetamol, Ibuprofeno, Cimegripe, Losartana, Amoxicilina, Dorflex, Cetirizina, Buscopan)"
+  },
+  "remedios-grade.png": {
+    "caixas": 20,
+    "tolerancia": 0,
+    "obs": "grade 4x5 com 4 remédios diferentes (foto enviada pelo usuário)"
+  }
+}
